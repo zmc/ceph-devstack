@@ -106,7 +106,3 @@ class PodmanResource:
     async def start(self):
         if getattr(self, "start_cmd", None):
             await self.cmd(self.format_cmd(self.start_cmd), check=True)
-
-    async def stop(self):
-        if getattr(self, "stop_cmd", None):
-            await self.cmd(self.format_cmd(self.stop_cmd))
