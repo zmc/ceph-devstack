@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 from typing import List
@@ -236,7 +237,8 @@ class TestNode(Container):
                 "bs=1",
                 "count=0",
                 f"seek={size_gb}G",
-            ]
+            ],
+            check=True,
         )
         await self.cmd(
             ["sudo", "losetup", self.loop_dev_name, loop_img_name], check=True
@@ -247,7 +249,7 @@ class TestNode(Container):
         if os.path.ismount(self.loop_dev_name):
             await self.cmd(["umount", self.loop_dev_name], check=True)
         if os.path.exists(self.loop_dev_name):
-            await self.cmd(["sudo", "losetup", "-d", self.loop_dev_name], check=True)
+            await self.cmd(["sudo", "losetup", "-d", self.loop_dev_name])
             await self.cmd(["sudo", "rm", "-f", self.loop_dev_name], check=True)
         if Config.args.dry_run:
             return
