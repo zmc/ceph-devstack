@@ -52,7 +52,17 @@ class Container(PodmanResource):
     async def create(self):
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.info(f"{self.name}: creating")
-        await self.cmd(args, check=True)
+        kwargs = dict(
+            env=dict(
+                CONTAINERS_STORAGE_CONF=os.path.normpath(
+                    os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "../podman_config/storage.conf",
+                    )
+                )
+            )
+        )
+        await self.cmd(args, kwargs, check=True)
         logger.info(f"{self.name}: created")
 
     async def start(self):
