@@ -1,4 +1,5 @@
 import asyncio
+import grp
 import logging
 import os
 import tempfile
@@ -15,6 +16,7 @@ from ceph_devstack.resources.ceph.containers import (
     TestNode,
     Teuthology,
 )
+from ceph_devstack.util import async_cmd
 
 logger = logging.getLogger()
 
@@ -77,7 +79,31 @@ class CephDevStack:
         ]
     )
 
+    async def check_requirements(self):
+        result = True
+        proc = await async_cmd(["sudo", "-v"])
+        if proc and proc.returncode:
+            result = False
+            logger.error("sudo access is required")
+        proc = await async_cmd(["command", "-v", "fuse-overlayfs"])
+        if proc and proc.returncode:
+            result = False
+            logger.error(
+                "Could not find fuse-overlayfs. Try: dnf install fuse-overlayfs"
+            )
+        if not os.access("/dev/loop-control", os.W_OK):
+            result = False
+            stat = os.stat("/dev/loop-control")
+            group_name = grp.getgrgid(stat.st_gid).gr_name
+            logger.error(
+                "Cannot write to /dev/loop-control. "
+                f"Try: sudo usermod -a -G {group_name} {os.getlogin()}"
+            )
+        return result
+
     async def apply(self, action):
+        if not await self.check_requirements():
+            raise RuntimeError("Requirements not met!")
         return await getattr(self, action)()
 
     def container_names(self, kind):
