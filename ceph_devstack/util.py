@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 
 from typing import Dict, Optional
 
@@ -18,7 +19,8 @@ async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):
     if Config.args.dry_run:
         logger.info(args)
         return
-    proc = await asyncio.create_subprocess_exec(*args, **kwargs)
+    env = os.environ | (kwargs.pop("env", None) or dict())
+    proc = await asyncio.create_subprocess_exec(*args, **kwargs, env=env)
     if wait:
         await proc.wait()
     return proc
