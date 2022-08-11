@@ -10,6 +10,10 @@ logger = logging.getLogger()
 
 async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):
     kwargs = kwargs or dict()
+    kwargs.update(
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
     logger.debug(" ".join(args))
     if Config.args.dry_run:
         logger.info(args)

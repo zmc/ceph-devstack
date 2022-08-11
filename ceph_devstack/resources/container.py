@@ -71,7 +71,7 @@ class Container(PodmanResource):
         return proc.returncode == 0
 
     async def is_running(self):
-        proc = await self.cmd(self.format_cmd(self.watch_cmd), stdout=True)
+        proc = await self.cmd(self.format_cmd(self.watch_cmd))
         if proc is None:
             return True
         if not await self.exists(proc):

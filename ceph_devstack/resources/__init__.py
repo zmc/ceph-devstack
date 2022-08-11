@@ -52,18 +52,14 @@ class PodmanResource:
         self,
         args: List[str],
         kwargs: Optional[Dict] = None,
-        stdout: bool = False,
         check: bool = False,
+        log_output: bool = False,
     ):
         kwargs = kwargs or dict()
-        if stdout:
-            kwargs |= dict(
-                stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-            )
         proc = await async_cmd(args, kwargs, wait=False)
         if proc is None:
             return
-        while stdout:
+        while log_output:
             assert proc.stderr is not None
             stderr_line = await proc.stderr.readline()
             stdout_line = await proc.stderr.readline()
@@ -75,9 +71,12 @@ class PodmanResource:
                 break
             await asyncio.sleep(0.01)
         else:
-            await proc.communicate()
+            await proc.wait()
         assert proc.returncode is not None
         if check and proc.returncode != 0:
+            assert proc.stderr is not None
+            stderr = await proc.stderr.read()
+            logger.error(stderr.decode())
             raise CalledProcessError(cmd=args, returncode=proc.returncode)
         return proc
 
