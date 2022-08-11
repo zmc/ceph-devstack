@@ -210,6 +210,9 @@ class TestNode(Container):
         size_gb = 5
         if not Config.args.dry_run:
             os.makedirs(self.loop_img_dir, exist_ok=True)
+        proc = await self.cmd(["lsmod", "|", "grep", "loop"])
+        if proc and proc.returncode != 0:
+            await self.cmd(["sudo", "modprobe", "loop"])
         loop_img_name = os.path.join(self.loop_img_dir, self.loop_img_name)
         await self.remove_loop_device()
         await self.cmd(
