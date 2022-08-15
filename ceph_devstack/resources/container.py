@@ -6,6 +6,7 @@ from typing import Dict, List, Union
 
 from asyncio.base_events import logger
 
+from ceph_devstack import Config
 from ceph_devstack.resources import PodmanResource
 
 
@@ -52,8 +53,9 @@ class Container(PodmanResource):
     async def create(self):
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.info(f"{self.name}: creating")
-        kwargs = dict(
-            env=dict(
+        kwargs = dict()
+        if not Config.native_overlayfs:
+            kwargs["env"] = dict(
                 CONTAINERS_STORAGE_CONF=os.path.normpath(
                     os.path.join(
                         os.path.dirname(os.path.abspath(__file__)),
@@ -61,7 +63,6 @@ class Container(PodmanResource):
                     )
                 )
             )
-        )
         await self.cmd(args, kwargs, check=True)
         logger.info(f"{self.name}: created")
 

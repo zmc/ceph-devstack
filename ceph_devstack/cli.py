@@ -6,6 +6,7 @@ import sys
 from typing import List
 
 from ceph_devstack import Config
+from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
 
 logging.basicConfig()
@@ -66,4 +67,9 @@ def main():
     if args.verbose:
         logger.setLevel(logging.DEBUG)
     obj = CephDevStack()
-    asyncio.run(obj.apply(args.command))
+
+    async def run():
+        await check_requirements()
+        await obj.apply(args.command)
+
+    asyncio.run(run())

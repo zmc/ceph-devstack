@@ -1,5 +1,6 @@
 import asyncio
 import grp
+import json
 import logging
 import os
 import tempfile
@@ -81,22 +82,16 @@ class CephDevStack:
 
     async def check_requirements(self):
         result = True
-        proc = await async_cmd(["sudo", "-v"])
-        if proc and proc.returncode:
+        loop_control = "/dev/loop-control"
+        if not os.path.exists(loop_control):
             result = False
-            logger.error("sudo access is required")
-        proc = await async_cmd(["command", "-v", "fuse-overlayfs"])
-        if proc and proc.returncode:
+            logger.error(f"{loop_control} does not exist!")
+        elif not os.access(loop_control, os.W_OK):
             result = False
-            logger.error(
-                "Could not find fuse-overlayfs. Try: dnf install fuse-overlayfs"
-            )
-        if not os.access("/dev/loop-control", os.W_OK):
-            result = False
-            stat = os.stat("/dev/loop-control")
+            stat = os.stat(loop_control)
             group_name = grp.getgrgid(stat.st_gid).gr_name
             logger.error(
-                "Cannot write to /dev/loop-control. "
+                f"Cannot write to {loop_control}. "
                 f"Try: sudo usermod -a -G {group_name} {os.getlogin()}"
             )
         return result
