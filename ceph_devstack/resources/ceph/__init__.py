@@ -1,6 +1,5 @@
 import asyncio
 import grp
-import json
 import logging
 import os
 import tempfile
@@ -17,7 +16,6 @@ from ceph_devstack.resources.ceph.containers import (
     TestNode,
     Teuthology,
 )
-from ceph_devstack.util import async_cmd
 
 logger = logging.getLogger()
 
