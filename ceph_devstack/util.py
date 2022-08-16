@@ -1,12 +1,9 @@
 import asyncio
-import logging
 import os
 
 from typing import Dict, Optional
 
-from ceph_devstack import Config
-
-logger = logging.getLogger()
+from ceph_devstack import Config, logger
 
 
 async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):

@@ -1,10 +1,7 @@
 import json
-import logging
 
-from ceph_devstack import Config
+from ceph_devstack import Config, logger
 from ceph_devstack.util import async_cmd
-
-logger = logging.getLogger()
 
 
 async def check_requirements():

@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
-import logging
 import os
 import subprocess
 
 from subprocess import CalledProcessError
 from typing import List, Dict, Set, Optional
 
+from ceph_devstack import logger
 from ceph_devstack.util import async_cmd
-
-logger = logging.getLogger()
 
 
 class DevStack:

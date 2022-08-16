@@ -5,13 +5,9 @@ import sys
 
 from typing import List
 
-from ceph_devstack import Config
+from ceph_devstack import Config, logger
 from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
-
-logging.basicConfig()
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:

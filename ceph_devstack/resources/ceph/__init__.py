@@ -1,12 +1,11 @@
 import asyncio
 import grp
-import logging
 import os
 import tempfile
 
 from collections import OrderedDict
 
-from ceph_devstack import Config
+from ceph_devstack import Config, logger
 from ceph_devstack.resources.misc import Secret, Network
 from ceph_devstack.resources.ceph.containers import (
     Postgres,
@@ -16,8 +15,6 @@ from ceph_devstack.resources.ceph.containers import (
     TestNode,
     Teuthology,
 )
-
-logger = logging.getLogger()
 
 
 class SSHKeyPair(Secret):

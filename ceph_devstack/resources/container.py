@@ -1,14 +1,11 @@
 import asyncio
-import logging
 import json
 import os
 
 from typing import Dict, List, Union
 
-from ceph_devstack import Config
+from ceph_devstack import Config, logger
 from ceph_devstack.resources import PodmanResource
-
-logger = logging.getLogger()
 
 
 class Container(PodmanResource):
