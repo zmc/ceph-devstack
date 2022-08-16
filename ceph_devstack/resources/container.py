@@ -2,7 +2,7 @@ import asyncio
 import json
 import os
 
-from typing import Dict, List, Union
+from typing import Dict, List, Optional
 
 from ceph_devstack import Config, logger
 from ceph_devstack.resources import PodmanResource
@@ -19,7 +19,7 @@ class Container(PodmanResource):
     start_cmd: List[str] = ["podman", "container", "start", "{name}"]
     stop_cmd: List[str] = ["podman", "container", "stop", "{name}"]
     watch_cmd: List[str] = ["podman", "container", "inspect", "{name}"]
-    env_vars: Dict[str, Union[str, None]] = dict()
+    env_vars: Dict[str, Optional[str]] = {}
 
     def __init__(self, name: str = ""):
         super().__init__(name)
@@ -35,13 +35,6 @@ class Container(PodmanResource):
             args.insert(-1, f"{key}={value}")
         return args
 
-    async def apply(self, action: str):
-        if action == "build":
-            key = self.image
-        else:
-            key = self.name
-        return await super().apply(action, key=key)
-
     async def build(self):
         if hasattr(self, "build_cmd"):
             logger.info(f"{self.name}: building")
@@ -51,16 +44,16 @@ class Container(PodmanResource):
     async def create(self):
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.info(f"{self.name}: creating")
-        kwargs = dict()
+        kwargs = {}
         if not Config.native_overlayfs:
-            kwargs["env"] = dict(
-                CONTAINERS_STORAGE_CONF=os.path.normpath(
+            kwargs["env"] = {
+                "CONTAINERS_STORAGE_CONF": os.path.normpath(
                     os.path.join(
                         os.path.dirname(os.path.abspath(__file__)),
                         "../podman_config/storage.conf",
                     )
                 )
-            )
+            }
         await self.cmd(args, kwargs, check=True)
         logger.info(f"{self.name}: created")
 
@@ -72,7 +65,7 @@ class Container(PodmanResource):
             while rc != 0:
                 result = await self.cmd(
                     self.format_cmd(["podman", "healthcheck", "run", "{name}"]),
-                    kwargs=dict(env=self.env_vars),
+                    kwargs={"env": self.env_vars},
                 )
                 if result is None:
                     break

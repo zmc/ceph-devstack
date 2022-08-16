@@ -14,7 +14,7 @@ from ceph_devstack.util import async_cmd
 class DevStack:
     def __init__(self, args: argparse.Namespace):
         self.args = args
-        self.env = dict()
+        self.env: Dict[str, str] = {}
 
     def choose_teuthology_branch(self):
         branch = os.environ.get("TEUTHOLOGY_BRANCH", self.get_current_branch())
@@ -25,7 +25,7 @@ class DevStack:
         return subprocess.check_output(
             ["git", "branch", "--show-current"],
             cwd=repo_path,
-        )
+        ).decode()
 
 
 class PodmanResource:
@@ -34,7 +34,7 @@ class PodmanResource:
     start_cmd: List[str] = []
     stop_cmd: List[str] = []
     cmd_vars: List[str] = ["name"]
-    log: Dict[str, Set[str]] = dict()
+    log: Dict[str, Set[str]] = {}
 
     def __init__(self, name: str = ""):
         if name:
@@ -53,7 +53,7 @@ class PodmanResource:
         check: bool = False,
         log_output: bool = False,
     ):
-        kwargs = kwargs or dict()
+        kwargs = kwargs or {}
         proc = await async_cmd(args, kwargs, wait=False)
         if proc is None:
             return
@@ -79,21 +79,18 @@ class PodmanResource:
         return proc
 
     def format_cmd(self, args: List):
-        vars = dict()
+        vars = {}
         for k in self.cmd_vars:
             v = getattr(self, k, None)
             if v is not None:
                 vars[k] = v
-        return list(map(lambda s: s.format(**vars), args))
+        return [s.format(**vars) for s in args]
 
-    async def apply(self, action: str, key: str = ""):
+    async def apply(self, action: str):
         method = getattr(self, action, None)
         if method is None:
             return
-        log = self.__class__.log.setdefault(key or self.name, set())
-        if action not in log:
-            await method()
-            log.add(action)
+        await method()
 
     async def create(self):
         await self.cmd(self.format_cmd(self.create_cmd), check=True)
