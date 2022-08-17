@@ -101,3 +101,7 @@ class PodmanResource:
     async def start(self):
         if getattr(self, "start_cmd", None):
             await self.cmd(self.format_cmd(self.start_cmd), check=True)
+
+    def __repr__(self):
+        param_str = "" if not hasattr(self, "_name") else f'name="{self._name}"'
+        return f"{self.__class__.__name__}({param_str})"
