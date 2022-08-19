@@ -59,7 +59,7 @@ class Container(PodmanResource):
 
     async def start(self):
         logger.info(f"{self.name}: starting")
-        await super().start()
+        await self.cmd(self.format_cmd(self.start_cmd), check=True)
         if "--health-cmd" in self.create_cmd or "--healthcheck-cmd" in self.create_cmd:
             rc = None
             while rc != 0:
