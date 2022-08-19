@@ -15,7 +15,6 @@ MacOS is a special case as all podman operations are done inside a CoreOS VM; it
 ## Setup
 
     $ sudo usermod -a -G disk $(whoami)  # and re-login afterward
-    $ sudo dnf install -y podman fuse-overlays
     $ git clone -b ceph-devstack https://github.com/ceph/teuthology/
     $ cd teuthology && ./bootstrap
     $ source ./virtualenv/bin/activate
