@@ -18,4 +18,7 @@ def main():
         await check_requirements()
         await obj.apply(args.command)
 
-    asyncio.run(run())
+    try:
+        asyncio.run(run())
+    except KeyboardInterrupt:
+        logger.debug("Exiting!")
