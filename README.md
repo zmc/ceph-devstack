@@ -24,6 +24,7 @@ MacOS is a special case as all podman operations are done inside a CoreOS VM; it
 
     $ export TEUTHOLOGY_SUITE=orch:cephadm:smoke-small
     $ ceph-devstack build && ceph-devstack create && ceph-devstack start
+    $ podman logs -f teuthology  # to watch as jobs run
     $ ceph-devstack remove  # when finished
 
 Note:

@@ -123,6 +123,9 @@ class CephDevStack:
         for kind in self.containers:
             for name in self.container_names(kind):
                 await kind(name=name).start()
+        logger.info(
+            "All containers are running. To monitor teuthology, try running: podman logs -f teuthology"
+        )
 
     async def stop(self):
         logger.info("Stopping containers...")
