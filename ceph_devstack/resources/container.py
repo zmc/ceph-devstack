@@ -37,13 +37,13 @@ class Container(PodmanResource):
 
     async def build(self):
         if hasattr(self, "build_cmd"):
-            logger.info(f"{self.name}: building")
+            logger.debug(f"{self.name}: building")
             await self.cmd(self.format_cmd(self.build_cmd), check=True)
-            logger.info(f"{self.name}: built")
+            logger.debug(f"{self.name}: built")
 
     async def create(self):
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
-        logger.info(f"{self.name}: creating")
+        logger.debug(f"{self.name}: creating")
         kwargs = {}
         if not Config.native_overlayfs:
             kwargs["env"] = {
@@ -55,10 +55,10 @@ class Container(PodmanResource):
                 )
             }
         await self.cmd(args, kwargs, check=True)
-        logger.info(f"{self.name}: created")
+        logger.debug(f"{self.name}: created")
 
     async def start(self):
-        logger.info(f"{self.name}: starting")
+        logger.debug(f"{self.name}: starting")
         await self.cmd(self.format_cmd(self.start_cmd), check=True)
         if "--health-cmd" in self.create_cmd or "--healthcheck-cmd" in self.create_cmd:
             rc = None
@@ -71,18 +71,18 @@ class Container(PodmanResource):
                     break
                 rc = result.returncode
                 await asyncio.sleep(1)
-        logger.info(f"{self.name}: started")
+        logger.debug(f"{self.name}: started")
 
     async def stop(self):
         if getattr(self, "stop_cmd", None):
-            logger.info(f"{self.name}: stopping")
+            logger.debug(f"{self.name}: stopping")
             await self.cmd(self.format_cmd(self.stop_cmd))
-            logger.info(f"{self.name}: stopping")
+            logger.debug(f"{self.name}: stopping")
 
     async def remove(self):
-        logger.info(f"{self.name}: removing")
+        logger.debug(f"{self.name}: removing")
         await super().remove()
-        logger.info(f"{self.name}: removed")
+        logger.debug(f"{self.name}: removed")
 
     async def exists(self, proc=None):
         proc = proc or await self.cmd(self.format_cmd(self.watch_cmd))

@@ -104,10 +104,12 @@ class CephDevStack:
         return [""]
 
     async def build(self):
+        logger.info("Building images...")
         for kind in self.containers.keys():
             await kind().build()
 
     async def create(self):
+        logger.info("Creating containers...")
         await CephDevStackNetwork().create()
         await SSHKeyPair().create()
         containers = []
@@ -117,11 +119,13 @@ class CephDevStack:
         await asyncio.gather(*containers)
 
     async def start(self):
+        logger.info("Starting containers...")
         for kind in self.containers:
             for name in self.container_names(kind):
                 await kind(name=name).start()
 
     async def stop(self):
+        logger.info("Stopping containers...")
         containers = []
         for kind in self.containers:
             for name in self.container_names(kind):
@@ -129,6 +133,7 @@ class CephDevStack:
         await asyncio.gather(*containers)
 
     async def remove(self):
+        logger.info("Removing containers...")
         containers = []
         for kind in self.containers:
             for name in self.container_names(kind):
@@ -138,6 +143,7 @@ class CephDevStack:
         await SSHKeyPair().remove()
 
     async def watch(self):
+        logger.info("Watching containers; will replace any that are stopped")
         containers = []
         for kind in self.containers:
             for name in self.container_names(kind):
@@ -147,7 +153,7 @@ class CephDevStack:
             try:
                 for container in containers:
                     if not await container.is_running():
-                        logger.info(f"Container {container.name} stopped!")
+                        logger.info(f"Container {container.name} stopped; replacing")
                         await container.create()
                         await container.start()
                         await asyncio.sleep(60)
