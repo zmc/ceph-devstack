@@ -4,6 +4,7 @@ from typing import List
 
 from ceph_devstack import Config
 from ceph_devstack.resources.container import Container
+from ceph_devstack.util import get_local_hostname
 
 
 class Postgres(Container):
@@ -91,7 +92,38 @@ class Paddles(Container):
     env_vars = {
         "PADDLES_SERVER_HOST": "0.0.0.0",
         "PADDLES_SQLALCHEMY_URL": "postgresql+psycopg2://admin:password@postgres:5432/paddles",
+        "PADDLES_JOB_LOG_HREF_TEMPL": f"http://{get_local_hostname()}:8000"
+        "/{run_name}/{job_id}/teuthology.log",
     }
+
+
+class Archive(Container):
+    image = "python:alpine"
+    cmd_vars: List[str] = ["name", "image", "archive_dir"]
+    create_cmd = [
+        "podman",
+        "container",
+        "create",
+        "-i",
+        "--network",
+        "ceph-devstack",
+        "-p",
+        "8000:8000",
+        "-v",
+        "{archive_dir}:/archive",
+        "--name",
+        "{name}",
+        "{image}",
+        "python3",
+        "-m",
+        "http.server",
+        "-d",
+        "/archive",
+    ]
+
+    @property
+    def archive_dir(self):
+        return os.path.join(Config.args.data_dir, "archive")
 
 
 class Pulpito(Container):

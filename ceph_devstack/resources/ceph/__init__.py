@@ -14,6 +14,7 @@ from ceph_devstack.resources.ceph.containers import (
     Pulpito,
     TestNode,
     Teuthology,
+    Archive,
 )
 from ceph_devstack.util import get_local_hostname
 
@@ -73,6 +74,7 @@ class CephDevStack:
             (Pulpito, 1),
             (TestNode, 3),
             (Teuthology, 1),
+            (Archive, 1),
         ]
     )
 
