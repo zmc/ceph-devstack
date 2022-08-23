@@ -12,7 +12,9 @@ logger = logging.getLogger("ceph-devstack")
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -33,7 +35,11 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("build", help="Build containers")
-    parser_create = subparsers.add_parser("create", help="Create the cluster")
+    parser_create = subparsers.add_parser(
+        "create",
+        help="Create the cluster",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     parser_create.add_argument(
         "-b",
         "--build",
