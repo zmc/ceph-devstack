@@ -12,6 +12,10 @@ def main():
     Config.args = args
     if args.verbose:
         logger.setLevel(logging.DEBUG)
+    if Config.args.command == "create":
+        Config.save()
+    else:
+        Config.load()
     obj = CephDevStack()
 
     async def run():

@@ -66,17 +66,20 @@ class CephDevStackNetwork(Network):
 class CephDevStack:
     networks = [CephDevStackNetwork]
     secrets = [SSHKeyPair]
-    containers = OrderedDict(
-        [
-            (Postgres, 1),
-            (Paddles, 1),
-            (Beanstalkd, 1),
-            (Pulpito, 1),
-            (TestNode, 3),
-            (Teuthology, 1),
-            (Archive, 1),
-        ]
-    )
+
+    @property
+    def containers(self):
+        return OrderedDict(
+            [
+                (Postgres, 1),
+                (Paddles, 1),
+                (Beanstalkd, 1),
+                (Pulpito, 1),
+                (TestNode, Config.args.testnode_count),
+                (Teuthology, 1),
+                (Archive, 1),
+            ]
+        )
 
     async def check_requirements(self):
         result = True

@@ -1,6 +1,8 @@
 import argparse
 import logging
+import os
 import pathlib
+import yaml
 
 from typing import List
 
@@ -35,6 +37,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default="/tmp/ceph-devstack",
         help="Store temporary data e.g. disk images here",
     )
+    parser.add_argument(
+        "--config-file",
+        type=pathlib.Path,
+        default="~/.config/ceph-devstack/config.yml",
+        help="Path to the ceph-devstack config file",
+    )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("build", help="Build containers")
     parser_create = subparsers.add_parser(
@@ -56,6 +64,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=False,
         help="Leave the cluster running - and don't auto-schedule anything",
     )
+    parser_create.add_argument(
+        "--testnode-count",
+        type=int,
+        default=3,
+        help="How many testnode containers to create",
+    )
     subparsers.add_parser("remove", help="Destroy the cluster")
     subparsers.add_parser("start", help="Start the cluster")
     subparsers.add_parser("stop", help="Stop the cluster")
@@ -69,3 +83,24 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 class Config:
     args = parse_args([])
     native_overlayfs: bool = True
+
+    @classmethod
+    @property
+    def config_file(cls):
+        return cls.args.config_file.expanduser()
+
+    @classmethod
+    def save(cls):
+        if cls.args.dry_run:
+            return
+        os.makedirs(os.path.dirname(cls.config_file), exist_ok=True)
+        conf_obj = {"testnode_count": cls.args.testnode_count}
+        cls.config_file.write_text(yaml.safe_dump(conf_obj))
+
+    @classmethod
+    def load(cls):
+        if cls.config_file.exists():
+            obj = yaml.safe_load(cls.config_file.read_text())
+            for k, v in obj.items():
+                setattr(cls.args, k, v)
+        return cls.args
