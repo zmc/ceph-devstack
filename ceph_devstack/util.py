@@ -1,5 +1,6 @@
 import asyncio
 import os
+import socket
 
 from typing import Dict, Optional
 
@@ -21,3 +22,16 @@ async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):
     if wait:
         await proc.wait()
     return proc
+
+
+def get_local_hostname():
+    """
+    If the value of socket.gethostname() is resolvable to an IP, return that.
+    Else, return "localhost"
+    """
+    name = socket.gethostname()
+    try:
+        socket.gethostbyname(name)
+        return name
+    except socket.gaierror:
+        return "localhost"

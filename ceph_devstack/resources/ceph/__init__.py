@@ -15,6 +15,7 @@ from ceph_devstack.resources.ceph.containers import (
     TestNode,
     Teuthology,
 )
+from ceph_devstack.util import get_local_hostname
 
 
 class SSHKeyPair(Secret):
@@ -126,6 +127,7 @@ class CephDevStack:
         logger.info(
             "All containers are running. To monitor teuthology, try running: podman logs -f teuthology"
         )
+        logger.info(f"View test results at http://{get_local_hostname()}:8081/")
 
     async def stop(self):
         logger.info("Stopping containers...")
