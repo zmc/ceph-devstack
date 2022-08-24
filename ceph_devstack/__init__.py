@@ -1,5 +1,6 @@
 import argparse
 import logging
+import pathlib
 
 from typing import List
 
@@ -30,6 +31,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--data-dir",
+        type=pathlib.Path,
         default="/tmp/ceph-devstack",
         help="Store temporary data e.g. disk images here",
     )
