@@ -171,7 +171,5 @@ class CephDevStack:
                     elif not await container.is_running():
                         logger.info(f"Container {container.name} stopped; restarting")
                         await container.start()
-                        await asyncio.sleep(60)
-                await asyncio.sleep(10)
             except KeyboardInterrupt:
                 break
