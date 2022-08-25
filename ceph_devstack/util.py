@@ -4,7 +4,7 @@ import socket
 
 from typing import Dict, Optional
 
-from ceph_devstack import Config, logger
+from ceph_devstack import logger
 
 
 async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):
@@ -14,9 +14,6 @@ async def async_cmd(args, kwargs: Optional[Dict] = None, wait=True):
         stderr=asyncio.subprocess.PIPE,
     )
     logger.debug(" ".join(args))
-    if Config.args.dry_run:
-        logger.info(args)
-        return
     env = os.environ | (kwargs.pop("env", None) or {})
     proc = await asyncio.create_subprocess_exec(*args, **kwargs, env=env)
     if wait:

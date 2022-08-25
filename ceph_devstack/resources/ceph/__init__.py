@@ -43,8 +43,6 @@ class SSHKeyPair(Secret):
             await self.cmd(self.format_cmd(remove_cmd))
 
     async def _get_ssh_keys(self):
-        if Config.args.dry_run:
-            return
         privkey_path = os.environ.get("SSH_PRIVKEY_PATH")
         self.pubkey_path = "/dev/null"
         if not privkey_path:

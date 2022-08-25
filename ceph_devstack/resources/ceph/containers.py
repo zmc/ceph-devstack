@@ -239,8 +239,7 @@ class TestNode(Container):
 
     async def create_loop_device(self):
         size_gb = 5
-        if not Config.args.dry_run:
-            os.makedirs(self.loop_img_dir, exist_ok=True)
+        os.makedirs(self.loop_img_dir, exist_ok=True)
         proc = await self.cmd(["lsmod", "|", "grep", "loop"])
         if proc and proc.returncode != 0:
             await self.cmd(["sudo", "modprobe", "loop"])
@@ -285,8 +284,6 @@ class TestNode(Container):
         if os.path.exists(self.loop_dev_name):
             await self.cmd(["sudo", "losetup", "-d", self.loop_dev_name])
             await self.cmd(["sudo", "rm", "-f", self.loop_dev_name], check=True)
-        if Config.args.dry_run:
-            return
         if os.path.exists(loop_img_name):
             os.remove(loop_img_name)
 

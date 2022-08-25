@@ -91,8 +91,6 @@ class Config:
 
     @classmethod
     def save(cls):
-        if cls.args.dry_run:
-            return
         os.makedirs(os.path.dirname(cls.config_file), exist_ok=True)
         conf_obj = {"testnode_count": cls.args.testnode_count}
         cls.config_file.write_text(yaml.safe_dump(conf_obj))
