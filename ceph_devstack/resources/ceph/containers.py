@@ -8,7 +8,7 @@ from ceph_devstack.util import get_local_hostname
 
 
 class Postgres(Container):
-    image = "docker.io/library/postgres"
+    image = "docker.io/library/postgres:latest"
     create_cmd = [
         "podman",
         "container",
@@ -30,7 +30,7 @@ class Postgres(Container):
         "5s",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
     env_vars = {
         "POSTGRES_USER": "root",
@@ -42,13 +42,13 @@ class Postgres(Container):
 
 
 class Beanstalkd(Container):
-    image = "beanstalkd"
+    image = "beanstalkd:latest"
     _name = "beanstalk"
     build_cmd = [
         "podman",
         "build",
         "-t",
-        "{image}:latest",
+        "{image}",
         "./containers/beanstalk/alpine/",
     ]
     create_cmd = [
@@ -62,12 +62,12 @@ class Beanstalkd(Container):
         "11300:11300",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
 
 
 class Paddles(Container):
-    image = "quay.io/ceph-infra/paddles"
+    image = "quay.io/ceph-infra/paddles:latest"
     create_cmd = [
         "podman",
         "container",
@@ -87,7 +87,7 @@ class Paddles(Container):
         "5s",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
     env_vars = {
         "PADDLES_SERVER_HOST": "0.0.0.0",
@@ -127,7 +127,7 @@ class Archive(Container):
 
 
 class Pulpito(Container):
-    image = "quay.io/ceph-infra/pulpito"
+    image = "quay.io/ceph-infra/pulpito:latest"
     create_cmd = [
         "podman",
         "container",
@@ -147,7 +147,7 @@ class Pulpito(Container):
         "5s",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
     env_vars = {
         "PULPITO_PADDLES_ADDRESS": "http://paddles:8080",
@@ -155,9 +155,9 @@ class Pulpito(Container):
 
 
 class TestNode(Container):
-    image = "testnode"
+    image = "testnode:latest"
     cmd_vars: List[str] = ["name", "image", "loop_dev_name"]
-    build_cmd = ["podman", "build", "-t", "{image}:latest", "./containers/testnode/"]
+    build_cmd = ["podman", "build", "-t", "{image}", "./containers/testnode/"]
     capabilities = [
         "SYS_ADMIN",
         "NET_ADMIN",
@@ -211,7 +211,7 @@ class TestNode(Container):
         "{loop_dev_name}",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
     env_vars = {
         "SSH_PUBKEY": "",
@@ -292,13 +292,13 @@ class TestNode(Container):
 
 
 class Teuthology(Container):
-    image = "teuthology"
+    image = "teuthology:latest"
     cmd_vars: List[str] = ["name", "image", "archive_dir"]
     build_cmd = [
         "podman",
         "build",
         "-t",
-        "teuthology:latest",
+        "teuthology",
         "-f",
         "./containers/teuthology-dev",
         ".",
@@ -318,7 +318,7 @@ class Teuthology(Container):
         "{archive_dir}:/archive_dir",
         "--name",
         "{name}",
-        "{image}:latest",
+        "{image}",
     ]
     env_vars = {
         "SSH_PRIVKEY": "",
