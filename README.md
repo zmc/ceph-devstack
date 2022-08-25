@@ -21,13 +21,40 @@ MacOS is a special case as all podman operations are done inside a CoreOS VM; it
     $ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 
 ## Usage
+Note: `ceph-devstack` currently must be run from within the root directory of a `teuthology` repo.
+
+First, you'll want to build all the containers:
+
+    $ ceph-devstack build
+
+Next, you can start them with:
+
+    $ ceph-devstack start
+
+Once everything is started, a message similar to this will be logged:
+
+`View test results at http://smithi065.front.sepia.ceph.com:8081/`
+
+This link points to the running Pulpito instance. Test archives are also stored in the `--data-dir` (default: `/tmp/ceph-devstack`).
+
+To watch teuthology's output, you can:
+
+    $ podman logs -f teuthology
+
+If you want testnode containers to be replaced as they are stopped and destroyed, you can:
+
+    $ ceph-devstack watch
+
+When finished, this command removes all the resources that were created:
+
+    $ ceph-devstack remove
+
+### Specifying a Test Suite
+By default, we run the `teuthology:no-ceph` suite to self-test teuthology. If we wanted to test Ceph itself, we could use the `orch:cephadm:smoke-small` suite:
 
     $ export TEUTHOLOGY_SUITE=orch:cephadm:smoke-small
-    $ ceph-devstack build && ceph-devstack create && ceph-devstack start
-    $ podman logs -f teuthology  # to watch as jobs run
-    $ ceph-devstack remove  # when finished
 
-Note:
+### Testnode Count
+We default to providing three testnode containers. If you want more, you can:
 
-- `ceph-devstack` currently must be run from within the root directory of a `teuthology` repo.
-- By default, we run the `teuthology:no-ceph` suite to self-test teuthology. In the above case, we want to test Ceph itself, so we use the `TEUTHOLOGY_SUITE` environment variable to specify a different one.
+    $ ceph-devstack create --testnode-count N
