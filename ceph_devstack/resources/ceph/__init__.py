@@ -162,9 +162,14 @@ class CephDevStack:
         while True:
             try:
                 for container in containers:
-                    if not await container.is_running():
-                        logger.info(f"Container {container.name} stopped; replacing")
+                    if not await container.exists():
+                        logger.info(
+                            f"Container {container.name} was removed; replacing"
+                        )
                         await container.create()
+                        await container.start()
+                    elif not await container.is_running():
+                        logger.info(f"Container {container.name} stopped; restarting")
                         await container.start()
                         await asyncio.sleep(60)
                 await asyncio.sleep(10)
