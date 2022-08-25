@@ -18,7 +18,7 @@ class Container(PodmanResource):
     remove_cmd: List[str] = ["podman", "container", "rm", "-f", "{name}"]
     start_cmd: List[str] = ["podman", "container", "start", "{name}"]
     stop_cmd: List[str] = ["podman", "container", "stop", "{name}"]
-    watch_cmd: List[str] = ["podman", "container", "inspect", "{name}"]
+    exists_cmd: List[str] = ["podman", "container", "inspect", "{name}"]
     env_vars: Dict[str, Optional[str]] = {}
 
     def __init__(self, name: str = ""):
@@ -84,15 +84,8 @@ class Container(PodmanResource):
         await super().remove()
         logger.debug(f"{self.name}: removed")
 
-    async def exists(self, proc=None):
-        proc = proc or await self.cmd(self.format_cmd(self.watch_cmd))
-        if proc is None:
-            return True
-        await proc.wait()
-        return proc.returncode == 0
-
     async def is_running(self):
-        proc = await self.cmd(self.format_cmd(self.watch_cmd))
+        proc = await self.cmd(self.format_cmd(self.exists_cmd))
         if proc is None:
             return True
         if not await self.exists(proc):

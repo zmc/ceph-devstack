@@ -125,6 +125,7 @@ class CephDevStack:
         await asyncio.gather(*containers)
 
     async def start(self):
+        await self.create()
         logger.info("Starting containers...")
         for kind in self.containers:
             for name in self.container_names(kind):

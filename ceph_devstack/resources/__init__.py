@@ -29,6 +29,7 @@ class DevStack:
 
 
 class PodmanResource:
+    exists_cmd: List[str] = []
     create_cmd: List[str] = []
     remove_cmd: List[str] = []
     start_cmd: List[str] = []
@@ -52,11 +53,9 @@ class PodmanResource:
         kwargs: Optional[Dict] = None,
         check: bool = False,
         log_output: bool = False,
-    ):
+    ) -> asyncio.subprocess.Process:
         kwargs = kwargs or {}
         proc = await async_cmd(args, kwargs, wait=False)
-        if proc is None:
-            return
         while log_output:
             assert proc.stderr is not None
             stderr_line = await proc.stderr.readline()
@@ -92,8 +91,15 @@ class PodmanResource:
             return
         await method()
 
+    async def exists(self, proc: Optional[asyncio.subprocess.Process] = None):
+        if not self.exists_cmd:
+            return False
+        proc = proc or await self.cmd(self.format_cmd(self.exists_cmd), check=False)
+        return proc.returncode == 0
+
     async def create(self):
-        await self.cmd(self.format_cmd(self.create_cmd), check=True)
+        if not await self.exists():
+            await self.cmd(self.format_cmd(self.create_cmd), check=True)
 
     async def remove(self):
         await self.cmd(self.format_cmd(self.remove_cmd))
