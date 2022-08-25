@@ -35,7 +35,7 @@ Once everything is started, a message similar to this will be logged:
 
 `View test results at http://smithi065.front.sepia.ceph.com:8081/`
 
-This link points to the running Pulpito instance. Test archives are also stored in the `--data-dir` (default: `/tmp/ceph-devstack`).
+This link points to the running Pulpito instance. Test archives are also stored in the `--data-dir` (default: `~/.local/share/ceph-devstack`).
 
 To watch teuthology's output, you can:
 

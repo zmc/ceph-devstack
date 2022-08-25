@@ -123,7 +123,7 @@ class Archive(Container):
 
     @property
     def archive_dir(self):
-        return os.path.join(Config.args.data_dir, "archive")
+        return os.path.join(Config.args.data_dir.expanduser(), "archive")
 
 
 class Pulpito(Container):
@@ -329,7 +329,7 @@ class Teuthology(Container):
 
     @property
     def archive_dir(self):
-        return os.path.join(Config.args.data_dir, "archive")
+        return os.path.join(Config.args.data_dir.expanduser(), "archive")
 
     async def create(self):
         os.makedirs(self.archive_dir, exist_ok=True)

@@ -34,7 +34,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     parser.add_argument(
         "--data-dir",
         type=pathlib.Path,
-        default="/tmp/ceph-devstack",
+        default="~/.local/share/ceph-devstack",
         help="Store temporary data e.g. disk images here",
     )
     parser.add_argument(
