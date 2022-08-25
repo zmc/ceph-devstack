@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import grp
 import os
 import tempfile
@@ -7,6 +8,7 @@ from collections import OrderedDict
 
 from ceph_devstack import Config, logger
 from ceph_devstack.resources.misc import Secret, Network
+from ceph_devstack.resources import CalledProcessError
 from ceph_devstack.resources.ceph.containers import (
     Postgres,
     Beanstalkd,
@@ -161,14 +163,17 @@ class CephDevStack:
         while True:
             try:
                 for container in containers:
-                    if not await container.exists():
-                        logger.info(
-                            f"Container {container.name} was removed; replacing"
-                        )
-                        await container.create()
-                        await container.start()
-                    elif not await container.is_running():
-                        logger.info(f"Container {container.name} stopped; restarting")
-                        await container.start()
+                    with contextlib.suppress(CalledProcessError):
+                        if not await container.exists():
+                            logger.info(
+                                f"Container {container.name} was removed; replacing"
+                            )
+                            await container.create()
+                            await container.start()
+                        elif not await container.is_running():
+                            logger.info(
+                                f"Container {container.name} stopped; restarting"
+                            )
+                            await container.start()
             except KeyboardInterrupt:
                 break
