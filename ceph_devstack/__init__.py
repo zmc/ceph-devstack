@@ -64,7 +64,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=False,
         help="Leave the cluster running - and don't auto-schedule anything",
     )
-    parser_create.add_argument(
+    parser.add_argument(
         "--testnode-count",
         type=int,
         default=3,
