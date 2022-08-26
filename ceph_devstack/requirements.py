@@ -47,4 +47,12 @@ async def check_requirements():
             logger.error(
                 "Could not find fuse-overlayfs. Try: dnf install fuse-overlayfs"
             )
+    # podman DNS plugin
+    dns_plugin_path = "/usr/libexec/cni/dnsname"
+    proc = await async_cmd(["ls", dns_plugin_path])
+    if proc.returncode:
+        result = False
+        logger.error(
+            "Could not find the podman DNS plugin. Try: dnf install /usr/libexec/cni/dnsname"
+        )
     return result
