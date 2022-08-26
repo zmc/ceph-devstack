@@ -123,7 +123,7 @@ class Archive(Container):
 
     @property
     def archive_dir(self):
-        return os.path.join(Config.args.data_dir.expanduser(), "archive")
+        return Config.data_dir / "archive"
 
 
 class Pulpito(Container):
@@ -220,7 +220,6 @@ class TestNode(Container):
 
     def __init__(self, name: str = ""):
         super().__init__(name=name)
-        self.loop_img_dir = os.path.join(Config.args.data_dir, "disk_images")
         self.loop_index = 0
         self.loop_img_name = self.name
         if "_" in self.name:
@@ -228,6 +227,10 @@ class TestNode(Container):
         else:
             self.loop_img_name += str(self.loop_index)
         self.loop_dev_name = f"/dev/loop{self.loop_index}"
+
+    @property
+    def loop_img_dir(self):
+        return Config.data_dir / "disk_images"
 
     async def create(self):
         if not await self.exists():
@@ -330,7 +333,7 @@ class Teuthology(Container):
 
     @property
     def archive_dir(self):
-        return os.path.join(Config.args.data_dir.expanduser(), "archive")
+        return Config.data_dir / "archive"
 
     async def create(self):
         os.makedirs(self.archive_dir, exist_ok=True)

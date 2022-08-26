@@ -1,9 +1,9 @@
 import argparse
 import logging
 import os
-import pathlib
 import yaml
 
+from pathlib import Path, PosixPath
 from typing import List
 
 
@@ -12,6 +12,16 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger("ceph-devstack")
+
+
+def represent_path(dumper: yaml.dumper.SafeDumper, data: PosixPath) -> yaml.Node:
+    return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
+
+
+yaml.SafeDumper.add_representer(
+    PosixPath,
+    represent_path,
+)
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -33,15 +43,21 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--data-dir",
-        type=pathlib.Path,
-        default="~/.local/share/ceph-devstack",
+        type=Path,
+        default=Path("~/.local/share/ceph-devstack"),
         help="Store temporary data e.g. disk images here",
     )
     parser.add_argument(
         "--config-file",
-        type=pathlib.Path,
-        default="~/.config/ceph-devstack/config.yml",
+        type=Path,
+        default=Path("~/.config/ceph-devstack/config.yml"),
         help="Path to the ceph-devstack config file",
+    )
+    parser.add_argument(
+        "--testnode-count",
+        type=int,
+        default=3,
+        help="How many testnode containers to create",
     )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("build", help="Build containers")
@@ -64,12 +80,6 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=False,
         help="Leave the cluster running - and don't auto-schedule anything",
     )
-    parser.add_argument(
-        "--testnode-count",
-        type=int,
-        default=3,
-        help="How many testnode containers to create",
-    )
     subparsers.add_parser("remove", help="Destroy the cluster")
     subparsers.add_parser("start", help="Start the cluster")
     subparsers.add_parser("stop", help="Stop the cluster")
@@ -86,12 +96,17 @@ class Config:
 
     @classmethod
     @property
-    def config_file(cls):
+    def config_file(cls) -> Path:
         return cls.args.config_file.expanduser()
 
     @classmethod
+    @property
+    def data_dir(cls) -> Path:
+        return cls.args.data_dir.expanduser()
+
+    @classmethod
     def save(cls):
-        os.makedirs(os.path.dirname(cls.config_file), exist_ok=True)
+        os.makedirs(cls.config_file.parent, exist_ok=True)
         conf_obj = {"testnode_count": cls.args.testnode_count}
         cls.config_file.write_text(yaml.safe_dump(conf_obj))
 
