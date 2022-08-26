@@ -230,7 +230,8 @@ class TestNode(Container):
         self.loop_dev_name = f"/dev/loop{self.loop_index}"
 
     async def create(self):
-        await self.create_loop_device()
+        if not await self.exists():
+            await self.create_loop_device()
         await super().create()
 
     async def remove(self):

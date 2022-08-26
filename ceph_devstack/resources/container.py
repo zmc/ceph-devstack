@@ -42,6 +42,8 @@ class Container(PodmanResource):
             logger.debug(f"{self.name}: built")
 
     async def create(self):
+        if await self.exists():
+            return
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.debug(f"{self.name}: creating")
         kwargs = {}

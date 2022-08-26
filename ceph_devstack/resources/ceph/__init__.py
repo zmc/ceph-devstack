@@ -26,6 +26,10 @@ class SSHKeyPair(Secret):
     cmd_vars = ["name", "privkey_path", "pubkey_path"]
     privkey_path = "id_rsa"
     pubkey_path = "id_rsa.pub"
+    exists_cmds = [
+        ["podman", "secret", "inspect", "{name}"],
+        ["podman", "secret", "inspect", "{name}.pub"],
+    ]
     create_cmds = [
         ["podman", "secret", "create", "{name}", "{privkey_path}"],
         ["podman", "secret", "create", "{name}.pub", "{pubkey_path}"],
@@ -35,7 +39,15 @@ class SSHKeyPair(Secret):
         ["podman", "secret", "rm", "{name}.pub"],
     ]
 
+    async def exists(self):
+        for exists_cmd in self.exists_cmds:
+            proc = await self.cmd(self.format_cmd(exists_cmd), check=False)
+            if proc.returncode:
+                return False
+
     async def create(self):
+        if await self.exists():
+            return
         await self._get_ssh_keys()
         for create_cmd in self.create_cmds:
             await self.cmd(self.format_cmd(create_cmd), check=True)
