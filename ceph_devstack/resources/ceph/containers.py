@@ -1,8 +1,9 @@
 import os
 
+from pathlib import Path
 from typing import List
 
-from ceph_devstack import Config
+from ceph_devstack import Config, logger
 from ceph_devstack.resources.container import Container
 from ceph_devstack.util import get_local_hostname
 
@@ -360,3 +361,41 @@ class Teuthology(Container):
     async def create(self):
         os.makedirs(self.archive_dir, exist_ok=True)
         await super().create()
+
+
+class Ceph(Container):
+    image = "ceph:latest"
+
+    @property
+    def build_cmd(self):
+        return [
+            "podman",
+            "build",
+            "-v",
+            f"{Config.ceph_repo}:/ceph",
+            "-v",
+            f"{Path('~/.ccache').expanduser()}:/ccache",
+            "-t",
+            "{image}",
+            "-f",
+            str(Path(__file__).parent.absolute() / "containerfiles/Containerfile.ceph"),
+            ".",
+        ]
+
+    create_cmd: List[str] = []
+    start_cmd: List[str] = []
+    stop_cmd: List[str] = []
+    remove_cmd: List[str] = []
+
+    env_vars = {"CCACHE_DIR": "/ccache"}
+
+    @property
+    def cwd(self):
+        return Config.ceph_repo
+
+    async def create(self):
+        if not self.cwd.exists():
+            logger.error(f"Ceph repo {self.cwd} does not exist; skipping Ceph build")
+            return
+        else:
+            await super().create()

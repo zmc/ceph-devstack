@@ -17,6 +17,7 @@ from ceph_devstack.resources.ceph.containers import (
     TestNode,
     Teuthology,
     Archive,
+    Ceph,
 )
 from ceph_devstack.util import get_local_hostname
 
@@ -90,6 +91,7 @@ class CephDevStack:
                 (Teuthology, 1),
                 (TestNode, await self.get_testnode_count()),
                 (Archive, 1),
+                (Ceph, 0),
             ]
         )
 

@@ -43,9 +43,14 @@ It is currently under active development and has not yet had a formal release.
     $ source ./venv/bin/activate
     $ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 
-## Usage
-Note: `ceph-devstack` currently must be run from within the root directory of a `teuthology` repo.
+### Repos
+`ceph-devstack` requires access to a local `teuthology` repo to function. By default it looks for it at `~/src/teuthology`. It's possible to override that via the `--teuthology-repo` flag, in a persistent manner by dropping a line like this into `~/.config/ceph-devstack/config.yml`:
 
+    teuthology_repo: ~/my/special/teuthology
+
+`ceph-devstack` can optionally build Ceph from source inside a container. This is an experimental feature, and currently will be triggered if we find a Ceph repo at (by default) `~/src/ceph`. This can also be set via `ceph_repo` in `config.yml`. Using the newly-built Ceph container _inside `ceph-devstack`_ is not yet implemented, however.
+
+## Usage
 First, you'll want to build all the containers:
 
     $ ceph-devstack build

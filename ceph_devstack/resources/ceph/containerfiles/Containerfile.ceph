@@ -1,0 +1,30 @@
+FROM quay.io/centos/centos:stream8
+RUN \
+  dnf install -y \
+    glibc-langpack-en \
+    hostname \
+    bc \
+    sudo \
+    java-1.8.0-openjdk-headless \
+    git \
+    epel-release \
+    gcc-toolset-11 && \
+  dnf install -y ccache && \
+  dnf clean packages
+WORKDIR /ceph
+ARG FOR_MAKE_CHECK=1
+ENV CCACHE_DIR=/ccache
+RUN \
+  cd /ceph && \
+  ./install-deps.sh && \
+  dnf clean all && \
+  rm -rf /var/cache/dnf/*
+RUN \
+  cd /ceph && \
+  rm -rf build && \
+  source /opt/rh/gcc-toolset-11/enable && \
+  time ./do_cmake.sh
+RUN \
+  cd /ceph && \
+  source /opt/rh/gcc-toolset-11/enable && \
+  cmake --build build
