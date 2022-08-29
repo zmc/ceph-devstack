@@ -40,6 +40,10 @@ class Postgres(Container):
         "APP_DB_NAME": "paddles",
     }
 
+    @property
+    def cwd(self):
+        return Config.teuthology_repo
+
 
 class Beanstalkd(Container):
     image = "beanstalkd:latest"
@@ -64,6 +68,10 @@ class Beanstalkd(Container):
         "{name}",
         "{image}",
     ]
+
+    @property
+    def cwd(self):
+        return Config.teuthology_repo
 
 
 class Paddles(Container):
@@ -229,6 +237,10 @@ class TestNode(Container):
         self.loop_dev_name = f"/dev/loop{self.loop_index}"
 
     @property
+    def cwd(self):
+        return Config.teuthology_repo
+
+    @property
     def loop_img_dir(self):
         return Config.data_dir / "disk_images"
 
@@ -330,6 +342,10 @@ class Teuthology(Container):
         "TEUTHOLOGY_SUITE": "",
         "TEUTH_BRANCH": "",
     }
+
+    @property
+    def cwd(self):
+        return Config.teuthology_repo
 
     @property
     def archive_dir(self):

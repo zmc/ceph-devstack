@@ -29,6 +29,7 @@ class DevStack:
 
 
 class PodmanResource:
+    cwd = "."
     exists_cmd: List[str] = []
     create_cmd: List[str] = []
     remove_cmd: List[str] = []
@@ -55,6 +56,8 @@ class PodmanResource:
         log_output: bool = False,
     ) -> asyncio.subprocess.Process:
         kwargs = kwargs or {}
+        if self.cwd != ".":
+            kwargs["cwd"] = str(self.cwd)
         proc = await async_cmd(args, kwargs, wait=False)
         while log_output:
             assert proc.stderr is not None
