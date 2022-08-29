@@ -110,22 +110,22 @@ class Config:
     @classmethod
     @property
     def config_file(cls) -> Path:
-        return cls.args.config_file.expanduser()
+        return Path(cls.args.config_file).expanduser()
 
     @classmethod
     @property
     def data_dir(cls) -> Path:
-        return cls.args.data_dir.expanduser()
+        return Path(cls.args.data_dir).expanduser()
 
     @classmethod
     @property
     def teuthology_repo(cls) -> Path:
-        return cls.args.teuthology_repo.expanduser()
+        return Path(cls.args.teuthology_repo).expanduser()
 
     @classmethod
     @property
     def ceph_repo(cls) -> Path:
-        return cls.args.ceph_repo.expanduser()
+        return Path(cls.args.ceph_repo).expanduser()
 
     @classmethod
     def save(cls):
