@@ -54,6 +54,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Path to the ceph-devstack config file",
     )
     parser.add_argument(
+        "--teuthology-repo",
+        type=Path,
+        default=Path("~/src/teuthology"),
+        help="Path to teuthology repository",
+    )
+    parser.add_argument(
         "--testnode-count",
         type=int,
         default=3,
@@ -92,6 +98,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 class Config:
     args = parse_args([])
+    storeable_args = ["teuthology_repo", "testnode_count"]
     native_overlayfs: bool = True
 
     @classmethod
@@ -105,9 +112,14 @@ class Config:
         return cls.args.data_dir.expanduser()
 
     @classmethod
+    @property
+    def teuthology_repo(cls) -> Path:
+        return cls.args.teuthology_repo.expanduser()
+
+    @classmethod
     def save(cls):
         os.makedirs(cls.config_file.parent, exist_ok=True)
-        conf_obj = {"testnode_count": cls.args.testnode_count}
+        conf_obj = {key: getattr(cls.args, key) for key in cls.storeable_args}
         cls.config_file.write_text(yaml.safe_dump(conf_obj))
 
     @classmethod
