@@ -54,6 +54,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Path to the ceph-devstack config file",
     )
     parser.add_argument(
+        "--ceph-repo",
+        type=Path,
+        default=Path("~/src/ceph"),
+        help="Path to ceph repository",
+    )
+    parser.add_argument(
         "--teuthology-repo",
         type=Path,
         default=Path("~/src/teuthology"),
@@ -98,7 +104,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 class Config:
     args = parse_args([])
-    storeable_args = ["teuthology_repo", "testnode_count"]
+    storeable_args = ["teuthology_repo", "ceph_repo", "testnode_count"]
     native_overlayfs: bool = True
 
     @classmethod
@@ -115,6 +121,11 @@ class Config:
     @property
     def teuthology_repo(cls) -> Path:
         return cls.args.teuthology_repo.expanduser()
+
+    @classmethod
+    @property
+    def ceph_repo(cls) -> Path:
+        return cls.args.ceph_repo.expanduser()
 
     @classmethod
     def save(cls):
