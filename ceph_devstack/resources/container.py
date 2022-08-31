@@ -36,12 +36,15 @@ class Container(PodmanResource):
         return args
 
     async def build(self):
-        if hasattr(self, "build_cmd"):
-            logger.debug(f"{self.name}: building")
-            await self.cmd(self.format_cmd(self.build_cmd), check=True)
-            logger.debug(f"{self.name}: built")
+        if not getattr(self, "build_cmd", None):
+            return
+        logger.debug(f"{self.name}: building")
+        await self.cmd(self.format_cmd(self.build_cmd), check=True)
+        logger.debug(f"{self.name}: built")
 
     async def create(self):
+        if not getattr(self, "create_cmd", None):
+            return
         if await self.exists():
             return
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
@@ -60,6 +63,8 @@ class Container(PodmanResource):
         logger.debug(f"{self.name}: created")
 
     async def start(self):
+        if not getattr(self, "start_cmd", None):
+            return
         logger.debug(f"{self.name}: starting")
         await self.cmd(self.format_cmd(self.start_cmd), check=True)
         if "--health-cmd" in self.create_cmd or "--healthcheck-cmd" in self.create_cmd:
@@ -76,12 +81,15 @@ class Container(PodmanResource):
         logger.debug(f"{self.name}: started")
 
     async def stop(self):
-        if getattr(self, "stop_cmd", None):
-            logger.debug(f"{self.name}: stopping")
-            await self.cmd(self.format_cmd(self.stop_cmd))
-            logger.debug(f"{self.name}: stopping")
+        if not getattr(self, "stop_cmd", None):
+            return
+        logger.debug(f"{self.name}: stopping")
+        await self.cmd(self.format_cmd(self.stop_cmd))
+        logger.debug(f"{self.name}: stopping")
 
     async def remove(self):
+        if not getattr(self, "remove_cmd", None):
+            return
         logger.debug(f"{self.name}: removing")
         await super().remove()
         logger.debug(f"{self.name}: removed")

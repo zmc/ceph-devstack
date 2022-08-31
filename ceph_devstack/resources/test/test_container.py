@@ -50,3 +50,11 @@ class TestContainer(_TestPodmanResource):
             obj = cls()
             obj.cmd.return_value = AsyncMock(returncode=1)
             assert await obj.is_running() is False
+
+    @pytest.mark.parametrize("action", apply_actions)
+    async def test_empty_cmd_skips_action(self, cls, action):
+        with patch.object(cls, "cmd"):
+            obj = cls()
+            setattr(obj, f"{action}_cmd", [])
+            await getattr(obj, action)()
+            obj.cmd.assert_not_awaited()
