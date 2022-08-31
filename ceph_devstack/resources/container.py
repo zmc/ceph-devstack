@@ -39,7 +39,9 @@ class Container(PodmanResource):
         if not getattr(self, "build_cmd", None):
             return
         logger.debug(f"{self.name}: building")
-        await self.cmd(self.format_cmd(self.build_cmd), check=True)
+        await self.cmd(
+            self.format_cmd(self.build_cmd), check=True, log_output=Config.args.verbose
+        )
         logger.debug(f"{self.name}: built")
 
     async def create(self):
