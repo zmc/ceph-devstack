@@ -6,11 +6,13 @@ from ceph_devstack.resources import PodmanResource, CalledProcessError
 
 
 class TestPodmanResource:
-    apply_actions = ["create", "remove"]
-
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def cls(self):
         return PodmanResource
+
+    @pytest.fixture(scope="class", params=["create", "remove"])
+    def action(self, request):
+        return request.param
 
     def test_name(self, cls):
         obj = cls()
@@ -31,13 +33,12 @@ class TestPodmanResource:
         obj = cls(name="foo")
         assert repr(obj) == f'{class_name}(name="foo")'
 
-    async def test_apply(self, cls):
-        for action in self.apply_actions:
-            with patch.object(cls, action):
-                obj = cls()
-                await obj.apply(action)
-                method = getattr(obj, action)
-                method.assert_awaited_once()
+    async def test_apply(self, cls, action):
+        with patch.object(cls, action):
+            obj = cls()
+            await obj.apply(action)
+            method = getattr(obj, action)
+            method.assert_awaited_once()
 
     async def test_cmd(self, cls):
         with patch("ceph_devstack.resources.async_cmd") as m_async_cmd:

@@ -10,11 +10,15 @@ from ceph_devstack.resources.test.test_podmanresource import (
 
 
 class TestContainer(_TestPodmanResource):
-    apply_actions = ["build", "create", "start", "stop", "remove"]
-
-    @pytest.fixture
+    @pytest.fixture(scope="class")
     def cls(self):
         return Container
+
+    @pytest.fixture(
+        scope="class", params=["build", "create", "start", "stop", "remove"]
+    )
+    def action(self, request):
+        return request.param
 
     @pytest.mark.parametrize("rc,res", ([0, True], [1, False]))
     async def test_exists_yes(self, cls, rc, res):
@@ -51,7 +55,6 @@ class TestContainer(_TestPodmanResource):
             obj.cmd.return_value = AsyncMock(returncode=1)
             assert await obj.is_running() is False
 
-    @pytest.mark.parametrize("action", apply_actions)
     async def test_empty_cmd_skips_action(self, cls, action):
         with patch.object(cls, "cmd"):
             obj = cls()
