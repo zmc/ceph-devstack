@@ -316,23 +316,29 @@ class Teuthology(Container):
         "./containers/teuthology-dev",
         ".",
     ]
-    create_cmd = [
-        "podman",
-        "container",
-        "create",
-        "-i",
-        "--network",
-        "ceph-devstack",
-        "--secret",
-        "id_rsa",
-        "-v",
-        "./containers/teuthology-dev/teuthology.sh:/teuthology.sh:Z",
-        "-v",
-        "{archive_dir}:/archive_dir:z",
-        "--name",
-        "{name}",
-        "{image}",
-    ]
+
+    @property
+    def create_cmd(self):
+        return [
+            "podman",
+            "container",
+            "create",
+            "-i",
+            "--label",
+            f"testnode_count={Config.args.testnode_count}",
+            "--network",
+            "ceph-devstack",
+            "--secret",
+            "id_rsa",
+            "-v",
+            "./containers/teuthology-dev/teuthology.sh:/teuthology.sh:Z",
+            "-v",
+            "{archive_dir}:/archive_dir:z",
+            "--name",
+            "{name}",
+            "{image}",
+        ]
+
     env_vars = {
         "SSH_PRIVKEY": "",
         "SSH_PRIVKEY_FILE": "",

@@ -80,19 +80,26 @@ class CephDevStack:
     networks = [CephDevStackNetwork]
     secrets = [SSHKeyPair]
 
-    @property
-    def containers(self):
+    async def get_containers(self):
         return OrderedDict(
             [
                 (Postgres, 1),
                 (Paddles, 1),
                 (Beanstalkd, 1),
                 (Pulpito, 1),
-                (TestNode, Config.args.testnode_count),
                 (Teuthology, 1),
+                (TestNode, await self.get_testnode_count()),
                 (Archive, 1),
             ]
         )
+
+    async def get_testnode_count(self) -> int:
+        teuth = Teuthology()
+        try:
+            data = await teuth.inspect()
+            return int(data[0]["Config"]["Labels"]["testnode_count"])
+        except (KeyError, IndexError, CalledProcessError):
+            return Config.args.testnode_count
 
     async def check_requirements(self):
         result = True
@@ -115,8 +122,8 @@ class CephDevStack:
             raise RuntimeError("Requirements not met!")
         return await getattr(self, action)()
 
-    def container_names(self, kind):
-        count = self.containers[kind]
+    async def get_container_names(self, kind):
+        count = (await self.get_containers())[kind]
         name = kind.__name__.lower()
         if count > 1:
             return [f"{name}_{i}" for i in range(count)]
@@ -124,7 +131,7 @@ class CephDevStack:
 
     async def build(self):
         logger.info("Building images...")
-        for kind in self.containers.keys():
+        for kind in (await self.get_containers()).keys():
             await kind().build()
 
     async def create(self):
@@ -132,16 +139,16 @@ class CephDevStack:
         await CephDevStackNetwork().create()
         await SSHKeyPair().create()
         containers = []
-        for kind in self.containers:
-            for name in self.container_names(kind):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
                 containers.append(kind(name=name).create())
         await asyncio.gather(*containers)
 
     async def start(self):
         await self.create()
         logger.info("Starting containers...")
-        for kind in self.containers:
-            for name in self.container_names(kind):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
                 await kind(name=name).start()
         logger.info(
             "All containers are running. To monitor teuthology, try running: podman logs -f teuthology"
@@ -151,16 +158,16 @@ class CephDevStack:
     async def stop(self):
         logger.info("Stopping containers...")
         containers = []
-        for kind in self.containers:
-            for name in self.container_names(kind):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
                 containers.append(kind(name=name).stop())
         await asyncio.gather(*containers)
 
     async def remove(self):
         logger.info("Removing containers...")
         containers = []
-        for kind in self.containers:
-            for name in self.container_names(kind):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
                 containers.append(kind(name=name).remove())
         await asyncio.gather(*containers)
         await CephDevStackNetwork().remove()
@@ -169,8 +176,8 @@ class CephDevStack:
     async def watch(self):
         logger.info("Watching containers; will replace any that are stopped")
         containers = []
-        for kind in self.containers:
-            for name in self.container_names(kind):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
                 containers.append(kind(name=name))
         logger.info(f"Watching {containers}")
         while True:

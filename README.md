@@ -58,3 +58,5 @@ By default, we run the `teuthology:no-ceph` suite to self-test teuthology. If we
 We default to providing three testnode containers. If you want more, you can:
 
     $ ceph-devstack create --testnode-count N
+
+This value will be stored as a label on the teuthology container when it is created, so subsequent `start`, `watch`, `stop` and `remove` invocations won't require the flag to be passed again.
