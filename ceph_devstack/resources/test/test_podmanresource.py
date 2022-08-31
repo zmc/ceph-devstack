@@ -1,6 +1,6 @@
 import pytest
 
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from ceph_devstack.resources import PodmanResource, CalledProcessError
 
@@ -40,16 +40,16 @@ class TestPodmanResource:
             method = getattr(obj, action)
             method.assert_awaited_once()
 
-    async def test_cmd(self, cls):
+    @pytest.mark.parametrize("kwargs", ([{}, [{"foo": "bar"}]]))
+    async def test_cmd(self, cls, kwargs):
         with patch("ceph_devstack.resources.async_cmd") as m_async_cmd:
+            # at_eof() is not async, so the below lines avoid this warning:
+            # RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
+            m_async_cmd.return_value.stderr.at_eof = Mock()
+            m_async_cmd.return_value.stdout.at_eof = Mock()
             obj = cls()
-            await obj.cmd(["0"])
-            m_async_cmd.assert_awaited_once_with(["0"], {}, wait=False)
-
-            m_async_cmd.reset_mock()
-            obj = cls()
-            await obj.cmd(["1"], kwargs={"foo": "bar"})
-            m_async_cmd.assert_awaited_once_with(["1"], {"foo": "bar"}, wait=False)
+            await obj.cmd(["0"], kwargs=kwargs)
+            m_async_cmd.assert_awaited_once_with(["0"], kwargs)
 
     async def test_cmd_failed(self, cls):
         obj = cls()

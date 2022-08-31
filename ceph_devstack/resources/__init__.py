@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import io
 import os
 import subprocess
 
+from logging import ERROR, INFO
 from subprocess import CalledProcessError
 from typing import List, Dict, Set, Optional
 
@@ -48,6 +50,21 @@ class PodmanResource:
             return self._name
         return self.__class__.__name__.lower()
 
+    async def _handle_output(
+        self,
+        proc_stream: asyncio.StreamReader,
+        our_stream: io.StringIO,
+        log: bool,
+        logLevel: int,
+    ):
+        while not proc_stream.at_eof():
+            line = (await proc_stream.readline()).decode()
+            our_stream.write(line)
+            line = line.rstrip()
+            if line and log:
+                logger.log(logLevel, f"{self.name}: {line}")
+        our_stream.seek(0)
+
     async def cmd(
         self,
         args: List[str],
@@ -58,26 +75,21 @@ class PodmanResource:
         kwargs = kwargs or {}
         if self.cwd != ".":
             kwargs["cwd"] = str(self.cwd)
-        proc = await async_cmd(args, kwargs, wait=False)
-        while log_output:
-            assert proc.stderr is not None
-            stderr_line = await proc.stderr.readline()
-            stdout_line = await proc.stderr.readline()
-            if stderr_line:
-                logger.error(f"{self.name}: {stderr_line.strip()}")
-            if stdout_line:
-                logger.info(f"{self.name}: {stdout_line.strip()}")
-            else:
-                break
-            await asyncio.sleep(0.01)
-        else:
-            await proc.wait()
-        assert proc.returncode is not None
+        stderr = io.StringIO()
+        stdout = io.StringIO()
+        proc = await async_cmd(args, kwargs)
+        await asyncio.gather(
+            proc.wait(),
+            self._handle_output(proc.stderr, stderr, log_output, ERROR),
+            self._handle_output(proc.stdout, stdout, log_output, INFO),
+        )
         if check and proc.returncode != 0:
-            assert proc.stderr is not None
-            stderr = await proc.stderr.read()
-            logger.error(stderr.decode())
+            if not log_output:
+                logger.error(stderr.read())
+                stderr.seek(0)
             raise CalledProcessError(cmd=args, returncode=proc.returncode)
+        proc.stderr = stderr
+        proc.stdout = stdout
         return proc
 
     def format_cmd(self, args: List):

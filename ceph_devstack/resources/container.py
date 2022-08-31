@@ -101,7 +101,7 @@ class Container(PodmanResource):
         if not await self.exists(proc):
             return False
         assert proc.stdout is not None
-        result = json.loads((await proc.stdout.read()).decode())
+        result = json.loads(proc.stdout.read())
         if not result:
             return False
         return result[0]["State"]["Status"].lower() == "running"

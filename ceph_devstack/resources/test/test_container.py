@@ -31,9 +31,7 @@ class TestContainer(_TestPodmanResource):
         with patch.object(cls, "cmd"):
             obj = cls()
             output_obj = [{"State": {"Status": "running"}}]
-            m_decode = Mock()
-            m_decode.return_value = json.dumps(output_obj)
-            m_read = AsyncMock(return_value=Mock(decode=m_decode))
+            m_read = Mock(return_value=json.dumps(output_obj))
             m_stdout = Mock(read=m_read)
             obj.cmd.return_value = AsyncMock(stdout=m_stdout, returncode=0)
             assert await obj.is_running() is True
@@ -42,9 +40,7 @@ class TestContainer(_TestPodmanResource):
         with patch.object(cls, "cmd"):
             obj = cls()
             output_obj = [{"State": {"Status": "crashed"}}]
-            m_decode = Mock()
-            m_decode.return_value = json.dumps(output_obj)
-            m_read = AsyncMock(return_value=Mock(decode=m_decode))
+            m_read = Mock(return_value=json.dumps(output_obj))
             m_stdout = Mock(read=m_read)
             obj.cmd.return_value = AsyncMock(stdout=m_stdout, returncode=0)
             assert await obj.is_running() is False
