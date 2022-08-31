@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import asyncio
+import json
 import io
 import os
 import subprocess
@@ -105,6 +106,10 @@ class PodmanResource:
         if method is None:
             return
         await method()
+
+    async def inspect(self):
+        proc = await self.cmd(self.format_cmd(self.exists_cmd))
+        return json.loads(proc.stdout.read())
 
     async def exists(self, proc: Optional[asyncio.subprocess.Process] = None):
         if not self.exists_cmd:
