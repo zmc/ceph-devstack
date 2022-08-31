@@ -76,8 +76,6 @@ class Container(PodmanResource):
                     self.format_cmd(["podman", "healthcheck", "run", "{name}"]),
                     kwargs={"env": self.env_vars},
                 )
-                if result is None:
-                    break
                 rc = result.returncode
                 await asyncio.sleep(1)
         logger.debug(f"{self.name}: started")
@@ -98,11 +96,8 @@ class Container(PodmanResource):
 
     async def is_running(self):
         proc = await self.cmd(self.format_cmd(self.exists_cmd))
-        if proc is None:
-            return True
         if not await self.exists(proc):
             return False
-        assert proc.stdout is not None
         result = json.loads(proc.stdout.read())
         if not result:
             return False
