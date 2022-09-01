@@ -104,7 +104,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
 
 class Config:
     args = parse_args([])
-    storeable_args = ["teuthology_repo", "ceph_repo"]
+    storeable_args = ["teuthology_repo", "ceph_repo", "data_dir"]
     native_overlayfs: bool = True
 
     @classmethod
