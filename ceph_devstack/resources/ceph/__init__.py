@@ -44,6 +44,7 @@ class SSHKeyPair(Secret):
             proc = await self.cmd(self.format_cmd(exists_cmd), check=False)
             if proc.returncode:
                 return False
+        return True
 
     async def create(self):
         if await self.exists():
