@@ -138,5 +138,7 @@ class Config:
         if cls.config_file.exists():
             obj = yaml.safe_load(cls.config_file.read_text())
             for k, v in obj.items():
-                setattr(cls.args, k, v)
+                if getattr(cls.args, k) != v:
+                    logger.info(f"Using value from config: {k}={v}")
+                    setattr(cls.args, k, v)
         return cls.args
