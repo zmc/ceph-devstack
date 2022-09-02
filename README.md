@@ -1,7 +1,6 @@
 # ceph-devstack
 A tool for testing [Ceph](https://github.com/ceph/ceph) locally using [nested rootless podman containers](https://www.redhat.com/sysadmin/podman-inside-container)
 
-
 ## Overview
 ceph-devstack is a tool that can deploy and manage containerized versions of [teuthology](https://github.com/ceph/teuthology) and its associated services, to test Ceph (or just teuthology) on your local machine. It lets you avoid:
 
@@ -9,7 +8,7 @@ ceph-devstack is a tool that can deploy and manage containerized versions of [te
 - Needing dedicated storage devices to test Ceph OSDs
 
 ## Requirements
-Mainly, podman 4.0+. This was initially developed on CentOS 9.Stream, but a recent Fedora ought to work as well. Ubuntu doesn't currently ship a new enough podman.
+Mainly, podman 4.0+. This was initially developed on CentOS 9.Stream, but a recent Fedora ought to work as well. Centos 8.Stream is mostly working, but hasn't yet passed a Ceph test so more effort is needed. Ubuntu doesn't currently ship a new enough podman.
 MacOS is a special case as all podman operations are done inside a CoreOS VM; it is not functional as of yet.
 
 ## Setup
