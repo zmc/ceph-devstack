@@ -7,6 +7,8 @@ ceph-devstack is a tool that can deploy and manage containerized versions of [te
 - Accessing Ceph's [Sepia lab](https://wiki.sepia.ceph.com/)
 - Needing dedicated storage devices to test Ceph OSDs
 
+It is currently under active development and has not yet had a formal release.
+
 ## Requirements
 Mainly, podman 4.0+ using the `crun` runtime. This was initially developed on CentOS 9.Stream, but a recent Fedora ought to work as well. Centos 8.Stream is mostly working, but hasn't yet passed a Ceph test so more effort is needed. Ubuntu doesn't currently ship a new enough podman.
 MacOS is a special case as all podman operations are done inside a CoreOS VM; it is not functional as of yet.
