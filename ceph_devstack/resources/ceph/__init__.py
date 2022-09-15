@@ -176,7 +176,9 @@ class CephDevStack:
     async def watch(self):
         logger.info("Watching containers; will replace any that are stopped")
         containers = []
-        for kind in (await self.get_containers()).keys():
+        for kind, count in (await self.get_containers()).items():
+            if not count > 0:
+                continue
             for name in await self.get_container_names(kind):
                 containers.append(kind(name=name))
         logger.info(f"Watching {containers}")
