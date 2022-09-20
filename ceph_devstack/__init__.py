@@ -72,7 +72,12 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="How many testnode containers to create",
     )
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("build", help="Build containers")
+    parser_build = subparsers.add_parser("build", help="Build container images")
+    parser_build.add_argument(
+        "image",
+        nargs="*",
+        help="Specific image(s) to build",
+    )
     parser_create = subparsers.add_parser(
         "create",
         help="Create the cluster",

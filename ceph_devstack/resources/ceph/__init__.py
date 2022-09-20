@@ -131,7 +131,10 @@ class CephDevStack:
 
     async def build(self):
         logger.info("Building images...")
+        images = Config.args.image
         for kind in (await self.get_containers()).keys():
+            if images and str(kind.__name__).lower() not in images:
+                continue
             await kind().build()
 
     async def create(self):
