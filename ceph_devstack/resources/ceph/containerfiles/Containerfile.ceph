@@ -19,12 +19,5 @@ RUN \
   ./install-deps.sh && \
   dnf clean all && \
   rm -rf /var/cache/dnf/*
-RUN \
-  cd /ceph && \
-  rm -rf build && \
-  source /opt/rh/gcc-toolset-11/enable && \
-  time ./do_cmake.sh
-RUN \
-  cd /ceph && \
-  source /opt/rh/gcc-toolset-11/enable && \
-  cmake --build build
+COPY entrypoint.ceph.sh /entrypoint.sh
+CMD ["/entrypoint.sh"]

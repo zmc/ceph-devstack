@@ -382,16 +382,26 @@ class Ceph(Container):
             ".",
         ]
 
-    create_cmd: List[str] = []
-    start_cmd: List[str] = []
-    stop_cmd: List[str] = []
-    remove_cmd: List[str] = []
+    @property
+    def create_cmd(self):
+        return [
+            "podman",
+            "container",
+            "create",
+            "-v",
+            f"{Config.ceph_repo}:/ceph",
+            "-v",
+            f"{Path('~/.ccache').expanduser()}:/ccache",
+            "--name",
+            "{name}",
+            "{image}",
+        ]
 
     env_vars = {"CCACHE_DIR": "/ccache"}
 
     @property
     def cwd(self):
-        return Config.ceph_repo
+        return Path(__file__).parent.absolute() / "containerfiles"
 
     async def create(self):
         if not self.cwd.exists():
