@@ -13,7 +13,7 @@ async def async_cmd(args, kwargs: Optional[Dict] = None):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-    logger.debug(" ".join(args))
+    logger.debug("> " + " ".join(args))
     env = os.environ | (kwargs.pop("env", None) or {})
     proc = await asyncio.create_subprocess_exec(*args, **kwargs, env=env)
     return proc

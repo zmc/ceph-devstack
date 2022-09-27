@@ -8,7 +8,7 @@ from typing import List
 
 
 logging.basicConfig(
-    format="%(levelname)s:%(message)s",
+    format="%(message)s",
     level=logging.INFO,
 )
 logger = logging.getLogger("ceph-devstack")
@@ -145,6 +145,6 @@ class Config:
             obj = yaml.safe_load(cls.config_file.read_text())
             for k, v in obj.items():
                 if getattr(cls.args, k) != v:
-                    logger.info(f"Using value from config: {k}={v}")
+                    logger.debug(f"Using value from config: {k}={v}")
                     setattr(cls.args, k, v)
         return cls.args
