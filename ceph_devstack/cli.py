@@ -17,6 +17,8 @@ def main():
 
     async def run():
         await check_requirements()
+        if args.command == "doctor":
+            return
         await obj.apply(args.command)
 
     try:
