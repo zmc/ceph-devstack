@@ -30,11 +30,16 @@ async def check_requirements():
         )
     # podman version for native overlay
     proc = await async_cmd(["podman", "version", "-f", "json"])
-    version_str = json.loads((await proc.stdout.read()).decode())["Client"]["Version"]
-    major, minor = version_str.split(".")[:2]
-    if not (int(major) >= 3 and int(minor) >= 1):
+    podman_version = parse_version(
+        json.loads((await proc.stdout.read()).decode())["Client"]["Version"]
+    )
+    version_for_overlay = Version("3.1")
+    if not podman_version >= version_for_overlay:
         needs_fuse = True
-        logger.warning("Podman version is too old for rootless native overlayfs")
+        logger.warning(
+            "Podman version is too old for rootless native overlayfs"
+            f"(needs {version_for_overlay})"
+        )
     if needs_fuse:
         Config.native_overlayfs = False
         proc = await async_cmd(["command", "-v", "fuse-overlayfs"])
