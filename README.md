@@ -9,16 +9,38 @@ ceph-devstack is a tool that can deploy and manage containerized versions of [te
 
 It is currently under active development and has not yet had a formal release.
 
+## Supported Operating Systems
+
+☑︎ CentOS 9.Stream should work out of the box
+
+☑︎ CentOS 8.Stream mostly works - but has not yet passed a Ceph test
+
+☐ A recent Fedora should work but has not been tested
+
+☒ Ubuntu does not currently ship a new enough podman
+
+☒ MacOS will require special effort to support since podman operations are done inside a VM
+
 ## Requirements
-Mainly, podman 4.0+ using the `crun` runtime. This was initially developed on CentOS 9.Stream, but a recent Fedora ought to work as well. Centos 8.Stream is mostly working, but hasn't yet passed a Ceph test so more effort is needed. Ubuntu doesn't currently ship a new enough podman.
-MacOS is a special case as all podman operations are done inside a CoreOS VM; it is not functional as of yet.
+
+* A supported operating system
+* podman 4.0+ using the `crun` runtime.
+  * On CentOS 8, modify `/etc/containers/containers.conf` to set the runtime
+* Linux kernel 5.12+, or 4.15+ _and_ `fuse-overlayfs`
+* cgroup v2
+  * On CentOS 8, see [./docs/cgroup_v2.md](./docs/cgroup_v2.md)
+* podman's DNS plugin, from the `podman-plugins` package
+* A user account that has `sudo` access and also is a member of the `disk` group
+
+`ceph-devstack doctor` will check the above and report any issues.
 
 ## Setup
 
     $ sudo usermod -a -G disk $(whoami)  # and re-login afterward
     $ git clone -b ceph-devstack https://github.com/ceph/teuthology/
     $ cd teuthology && ./bootstrap
-    $ source ./virtualenv/bin/activate
+    $ python3 -m venv venv
+    $ source ./venv/bin/activate
     $ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 
 ## Usage
