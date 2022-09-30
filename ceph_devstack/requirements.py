@@ -60,6 +60,9 @@ async def check_requirements():
             "cgroup v2 is not enabled. Try: "
             "grubby --update-kernel=ALL --args='systemd.unified_cgroup_hierarchy=1'"
         )
+    # sysctl settings for OSD
+    await check_sysctl_value("fs.aio-max-nr", 1048576)
+    await check_sysctl_value("kernel.pid_max", 4194304)
     # podman DNS plugin
     dns_plugin_path = "/usr/libexec/cni/dnsname"
     proc = await async_cmd(["ls", dns_plugin_path])
@@ -69,3 +72,13 @@ async def check_requirements():
             "Could not find the podman DNS plugin. Try: dnf install /usr/libexec/cni/dnsname"
         )
     return result
+
+
+async def check_sysctl_value(name: str, min_value: int):
+    proc = await async_cmd(["sysctl", "-b", name])
+    our_value = int((await proc.stdout.read()).decode())
+    if our_value < min_value:
+        logger.warning(
+            f"sysctl setting {name} ({our_value}) is too low. Try: "
+            f"sysctl {name}={min_value}"
+        )
