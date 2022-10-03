@@ -31,6 +31,9 @@ It is currently under active development and has not yet had a formal release.
   * On CentOS 8, see [./docs/cgroup_v2.md](./docs/cgroup_v2.md)
 * podman's DNS plugin, from the `podman-plugins` package
 * A user account that has `sudo` access and also is a member of the `disk` group
+* The following sysctl settings:
+  * `fs.aio-max-nr=1048576`
+  * `kernel.pid_max=4194304`
 
 `ceph-devstack doctor` will check the above and report any issues.
 
