@@ -39,23 +39,29 @@ It is currently under active development and has not yet had a formal release.
 
 ## Setup
 
-    $ sudo usermod -a -G disk $(whoami)  # and re-login afterward
-    $ git clone -b ceph-devstack https://github.com/ceph/teuthology/
-    $ cd teuthology && ./bootstrap
-    $ python3 -m venv venv
-    $ source ./venv/bin/activate
-    $ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
+```bash
+sudo usermod -a -G disk $(whoami)  # and re-login afterward
+git clone -b ceph-devstack https://github.com/ceph/teuthology/
+cd teuthology && ./bootstrap
+python3 -m venv venv
+source ./venv/bin/activate
+python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
+```
 
 ## Usage
 Note: `ceph-devstack` currently must be run from within the root directory of a `teuthology` repo.
 
 First, you'll want to build all the containers:
 
-    $ ceph-devstack build
+```bash
+ceph-devstack build
+```
 
 Next, you can start them with:
 
-    $ ceph-devstack start
+```bash
+ceph-devstack start
+```
 
 Once everything is started, a message similar to this will be logged:
 
@@ -65,29 +71,41 @@ This link points to the running Pulpito instance. Test archives are also stored 
 
 To watch teuthology's output, you can:
 
-    $ podman logs -f teuthology
+```bash
+podman logs -f teuthology
+```
 
 If you want testnode containers to be replaced as they are stopped and destroyed, you can:
 
-    $ ceph-devstack watch
+```bash
+ceph-devstack watch
+```
 
 When finished, this command removes all the resources that were created:
 
-    $ ceph-devstack remove
+```bash
+ceph-devstack remove
+```
 
 ### Specifying a Test Suite
 By default, we run the `teuthology:no-ceph` suite to self-test teuthology. If we wanted to test Ceph itself, we could use the `orch:cephadm:smoke-small` suite:
 
-    $ export TEUTHOLOGY_SUITE=orch:cephadm:smoke-small
+```bash
+export TEUTHOLOGY_SUITE=orch:cephadm:smoke-small
+```
 
 It's possible to skip the automatic suite-scheduling behavior:
 
-    $ export TEUTHOLOGY_SUITE=none
+```bash
+export TEUTHOLOGY_SUITE=none
+```
 
 ### Testnode Count
 We default to providing three testnode containers. If you want more, you can:
 
-    $ ceph-devstack create --testnode-count N
+```bash
+ceph-devstack create --testnode-count N
+```
 
 This value will be stored as a label on the teuthology container when it is created, so subsequent `start`, `watch`, `stop` and `remove` invocations won't require the flag to be passed again.
 
@@ -96,11 +114,15 @@ If you need to use "real" testnodes and have access to a lab, there are a few ad
 
 To give the teuthology container access to your SSH private key (via `podman secret`):
 
-    $ export SSH_PRIVKEY_PATH=$HOME/.ssh/id_rsa
+```bash
+export SSH_PRIVKEY_PATH=$HOME/.ssh/id_rsa
+```
 
 To use an ansible "secrets" or "inventory" repo:
 
-    $ export ANSIBLE_INVENTORY_PATH=$HOME/src/ceph-sepia-secrets
+```bash
+$ export ANSIBLE_INVENTORY_PATH=$HOME/src/ceph-sepia-secrets
+```
 
 To lock machines from the lab:
 
@@ -115,6 +137,6 @@ ssh teuthology.front.sepia.ceph.com
 Once you have your machines locked, you need to provide a list of their hostnames and their machine type:
 
 ```bash
-export TESTNODES="smithi999.front.sepia.ceph.com,smithi123.front.sepia.ceph.com"
+export TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepia.ceph.com"
 export MACHINE_TYPE="smithi"
 ```
