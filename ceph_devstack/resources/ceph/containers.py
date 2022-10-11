@@ -344,7 +344,6 @@ class Teuthology(Container):
         "SSH_PRIVKEY_FILE": "",
         "MACHINE_TYPE": "",
         "TESTNODES": "",
-        "TEUTHOLOGY_WAIT": "",
         "TEUTHOLOGY_SUITE": "",
         "TEUTH_BRANCH": "",
     }

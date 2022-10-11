@@ -80,6 +80,10 @@ By default, we run the `teuthology:no-ceph` suite to self-test teuthology. If we
 
     $ export TEUTHOLOGY_SUITE=orch:cephadm:smoke-small
 
+It's possible to skip the automatic suite-scheduling behavior:
+
+    $ export TEUTHOLOGY_SUITE=none
+
 ### Testnode Count
 We default to providing three testnode containers. If you want more, you can:
 
