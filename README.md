@@ -90,3 +90,14 @@ We default to providing three testnode containers. If you want more, you can:
     $ ceph-devstack create --testnode-count N
 
 This value will be stored as a label on the teuthology container when it is created, so subsequent `start`, `watch`, `stop` and `remove` invocations won't require the flag to be passed again.
+
+### Using testnodes from an existing lab
+If you need to use "real" testnodes and have access to a lab, there are a few additonal steps to take:
+
+To give the teuthology container access to your SSH private key (via `podman secret`):
+
+    $ export SSH_PRIVKEY_PATH=$HOME/.ssh/id_rsa
+
+To use an ansible "secrets" or "inventory" repo, e.g. `ceph-sepia-secrets`:
+
+    $ export ANSIBLE_INVENTORY_PATH=$HOME/src/ceph-sepia-secrets

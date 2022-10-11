@@ -319,7 +319,7 @@ class Teuthology(Container):
 
     @property
     def create_cmd(self):
-        return [
+        cmd = [
             "podman",
             "container",
             "create",
@@ -334,10 +334,21 @@ class Teuthology(Container):
             "./containers/teuthology-dev/teuthology.sh:/teuthology.sh:Z",
             "-v",
             "{archive_dir}:/archive_dir:z",
+        ]
+        ansible_inv = os.environ.get("ANSIBLE_INVENTORY_PATH")
+        if ansible_inv:
+            cmd += [
+                "-v",
+                f"{ansible_inv}/inventory:/etc/ansible/hosts",
+                "-v",
+                f"{ansible_inv}/secrets:/etc/ansible/secrets",
+            ]
+        cmd += [
             "--name",
             "{name}",
             "{image}",
         ]
+        return cmd
 
     env_vars = {
         "SSH_PRIVKEY": "",
