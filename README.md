@@ -92,12 +92,29 @@ We default to providing three testnode containers. If you want more, you can:
 This value will be stored as a label on the teuthology container when it is created, so subsequent `start`, `watch`, `stop` and `remove` invocations won't require the flag to be passed again.
 
 ### Using testnodes from an existing lab
-If you need to use "real" testnodes and have access to a lab, there are a few additonal steps to take:
+If you need to use "real" testnodes and have access to a lab, there are a few additonal steps to take. We will use the Sepia lab as an example below:
 
 To give the teuthology container access to your SSH private key (via `podman secret`):
 
     $ export SSH_PRIVKEY_PATH=$HOME/.ssh/id_rsa
 
-To use an ansible "secrets" or "inventory" repo, e.g. `ceph-sepia-secrets`:
+To use an ansible "secrets" or "inventory" repo:
 
     $ export ANSIBLE_INVENTORY_PATH=$HOME/src/ceph-sepia-secrets
+
+To lock machines from the lab:
+
+```bash
+ssh teuthology.front.sepia.ceph.com
+~/teuthology/virtualenv/bin/teuthology-lock \
+  --lock-many 1 \
+  --machine-type smithi \
+  --desc "teuthology dev testing"
+```
+
+Once you have your machines locked, you need to provide a list of their hostnames and their machine type:
+
+```bash
+export TESTNODES="smithi999.front.sepia.ceph.com,smithi123.front.sepia.ceph.com"
+export MACHINE_TYPE="smithi"
+```
