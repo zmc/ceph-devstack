@@ -313,7 +313,7 @@ class Teuthology(Container):
         "-t",
         "teuthology",
         "-f",
-        "./containers/teuthology-dev",
+        "./containers/teuthology-dev/Dockerfile",
         ".",
     ]
 
