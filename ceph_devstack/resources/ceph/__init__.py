@@ -1,6 +1,7 @@
 import asyncio
 import contextlib
 import grp
+import getpass
 import os
 import tempfile
 
@@ -113,7 +114,7 @@ class CephDevStack:
             group_name = grp.getgrgid(stat.st_gid).gr_name
             logger.error(
                 f"Cannot write to {loop_control}. "
-                f"Try: sudo usermod -a -G {group_name} {os.getlogin()}"
+                f"Try: sudo usermod -a -G {group_name} {getpass.getuser()}"
             )
         return result
 
