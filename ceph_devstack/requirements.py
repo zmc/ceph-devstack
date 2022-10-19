@@ -15,6 +15,7 @@ async def check_requirements():
         logger.error("Support is currently limited to Linux.")
         return result
     proc = await async_cmd(["sudo", "-v"])
+    await proc.wait()
     if proc.returncode:
         result = False
         logger.error("sudo access is required")
@@ -30,6 +31,7 @@ async def check_requirements():
         )
     # podman version for native overlay
     proc = await async_cmd(["podman", "version", "-f", "json"])
+    await proc.wait()
     podman_version = parse_version(
         json.loads((await proc.stdout.read()).decode())["Client"]["Version"]
     )
@@ -43,6 +45,7 @@ async def check_requirements():
     if needs_fuse:
         Config.native_overlayfs = False
         proc = await async_cmd(["command", "-v", "fuse-overlayfs"])
+        await proc.wait()
         if proc and proc.returncode:
             result = False
             logger.error(
@@ -66,6 +69,7 @@ async def check_requirements():
     # podman DNS plugin
     dns_plugin_path = "/usr/libexec/cni/dnsname"
     proc = await async_cmd(["ls", dns_plugin_path])
+    await proc.wait()
     if proc.returncode:
         result = False
         logger.error(
@@ -76,6 +80,7 @@ async def check_requirements():
 
 async def check_sysctl_value(name: str, min_value: int):
     proc = await async_cmd(["sysctl", "-b", name])
+    await proc.wait()
     our_value = int((await proc.stdout.read()).decode())
     if our_value < min_value:
         logger.warning(
