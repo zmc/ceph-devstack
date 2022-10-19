@@ -8,7 +8,7 @@ from ceph_devstack.util import get_local_hostname
 
 
 class Postgres(Container):
-    image = "docker.io/library/postgres:latest"
+    image = "docker.io/library/postgres:14"
     create_cmd = [
         "podman",
         "container",
