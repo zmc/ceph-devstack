@@ -187,6 +187,7 @@ class TestNode(Container):
         "-i",
         "--network",
         "ceph-devstack",
+        "--systemd=always",
         "--cgroupns=host",
         "--secret",
         "id_rsa.pub",
