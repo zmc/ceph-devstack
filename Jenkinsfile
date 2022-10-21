@@ -15,7 +15,8 @@ pipeline {
           sudo dnf install -y podman podman-plugins python3-virtualenv
           sudo sysctl fs.aio-max-nr=1048576
           sudo usermod -a -G disk ${env.USER}
-          sudo setsebool -P container_manage_cgroup true
+          sudo setsebool -P container_manage_cgroup=true
+          sudo setsebool -P container_use_devices=true
         """
       }
     }

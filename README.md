@@ -34,6 +34,9 @@ It is currently under active development and has not yet had a formal release.
 * The following sysctl settings:
   * `fs.aio-max-nr=1048576`
   * `kernel.pid_max=4194304`
+* If using SELinux in enforcing mode:
+  * `setsebool -P container_manage_cgroup=true`
+  * `setsebool -P container_use_devices=true`
 
 `ceph-devstack doctor` will check the above and report any issues.
 
