@@ -69,7 +69,8 @@ pipeline {
     stage("Wait for teuthology container") {
       steps {
         sh """
-          exit \$(podman wait teuthology)
+          podman wait teuthology
+          exit \$(podman inspect -f "{{.State.ExitCode}}" teuthology)
         """
       }
     }
@@ -77,6 +78,8 @@ pipeline {
   post {
     always {
       sh """
+        mkdir -p data/containers
+        podman logs teuthology 2>&1 > data/containers/teuthology.log
         source ./venv/bin/activate
         ceph-devstack --config-file ${env.CDS_CONF} -v remove
         podman volume prune -f
