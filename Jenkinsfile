@@ -78,8 +78,7 @@ pipeline {
   post {
     always {
       sh """
-        mkdir -p data/containers
-        podman logs teuthology 2>&1 > data/containers/teuthology.log
+        podman logs teuthology
       """
       sh """
         mkdir -p data/containers
@@ -90,7 +89,7 @@ pipeline {
         podman ps -a
         sudo sysctl fs.aio-max-nr=${env.OLD_AIO_MAX_NR}
       """
-      archiveArtifacts artifacts: 'ceph-devstack.yml,data/archive/**,data/containers/**', fingerprint: true
+      archiveArtifacts artifacts: 'ceph-devstack.yml,data/archive/**', fingerprint: true
     }
   }
 }
