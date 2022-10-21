@@ -3,6 +3,7 @@ import contextlib
 import grp
 import getpass
 import os
+import subprocess
 import tempfile
 
 from collections import OrderedDict
@@ -104,6 +105,13 @@ class CephDevStack:
 
     async def check_requirements(self):
         result = True
+
+        try:
+            subprocess.check_call(["sudo", "-v"])
+        except subprocess.CalledProcessError:
+            result = False
+            logger.error("sudo access is required")
+
         loop_control = "/dev/loop-control"
         if not os.path.exists(loop_control):
             result = False

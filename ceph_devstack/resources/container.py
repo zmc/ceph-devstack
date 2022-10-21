@@ -52,15 +52,6 @@ class Container(PodmanResource):
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.debug(f"{self.name}: creating")
         kwargs = {}
-        if not Config.native_overlayfs:
-            kwargs["env"] = {
-                "CONTAINERS_STORAGE_CONF": os.path.normpath(
-                    os.path.join(
-                        os.path.dirname(os.path.abspath(__file__)),
-                        "../podman_config/storage.conf",
-                    )
-                )
-            }
         await self.cmd(args, kwargs, check=True)
         logger.debug(f"{self.name}: created")
 
