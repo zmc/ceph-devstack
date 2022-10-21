@@ -80,13 +80,17 @@ pipeline {
       sh """
         mkdir -p data/containers
         podman logs teuthology 2>&1 > data/containers/teuthology.log
+      """
+      sh """
+        mkdir -p data/containers
+        podman logs teuthology 2>&1 > data/containers/teuthology.log
         source ./venv/bin/activate
         ceph-devstack --config-file ${env.CDS_CONF} -v remove
         podman volume prune -f
         podman ps -a
         sudo sysctl fs.aio-max-nr=${env.OLD_AIO_MAX_NR}
       """
-      archiveArtifacts artifacts: 'ceph-devstack.yml,data/archive/**', fingerprint: true
+      archiveArtifacts artifacts: 'ceph-devstack.yml,data/archive/**,data/containers/**', fingerprint: true
     }
   }
 }
