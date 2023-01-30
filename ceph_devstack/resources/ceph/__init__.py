@@ -7,8 +7,9 @@ import subprocess
 import tempfile
 
 from collections import OrderedDict
+from pathlib import Path
 
-from ceph_devstack import Config, logger
+from ceph_devstack import Config, logger, PROJECT_ROOT
 from ceph_devstack.resources.misc import Secret, Network
 from ceph_devstack.resources import CalledProcessError
 from ceph_devstack.resources.ceph.containers import (
@@ -103,12 +104,14 @@ class CephDevStack:
         except (KeyError, IndexError, CalledProcessError):
             return Config.args.testnode_count
 
-    async def check_requirements(self):
+    def check_requirements(self):
         result = True
 
         try:
             subprocess.check_call(["sudo", "-v"])
+            has_sudo = True
         except subprocess.CalledProcessError:
+            has_sudo = False
             result = False
             logger.error("sudo access is required")
 
@@ -124,10 +127,28 @@ class CephDevStack:
                 f"Cannot write to {loop_control}. "
                 f"Try: sudo usermod -a -G {group_name} {getpass.getuser()}"
             )
+
+        # Check for SELinux being enabled and Enforcing; then check for the presence of our
+        # module. If necessary, inform the user and instruct them how to build and install.
+        selinux_sysfs = Path("/sys/fs/selinux")
+        if (
+            has_sudo
+            and selinux_sysfs.exists()
+            and (selinux_sysfs / "enforce").read_text().strip() == "1"
+        ):
+            out = subprocess.check_output(["sudo", "semodule", "-l"]).decode()
+            if "ceph_devstack" not in out.split("\n"):
+                result = False
+                logger.error(
+                    "SELinux is in Enforcing mode. To run nested rootless podman containers, "
+                    "it is necessary to install ceph-devstack's SELinux module. "
+                    f"Try: (cd {PROJECT_ROOT} && make -f /usr/share/selinux/devel/Makefile "
+                    "ceph_devstack.pp && sudo semodule -i ceph_devstack.pp)"
+                )
         return result
 
     async def apply(self, action):
-        if not await self.check_requirements():
+        if not self.check_requirements():
             raise RuntimeError("Requirements not met!")
         return await getattr(self, action)()
 

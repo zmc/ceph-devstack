@@ -1,0 +1,95 @@
+module ceph_devstack 1.0;
+
+require {
+	type container_init_t;
+	type proc_t;
+	type sysfs_t;
+	type tmpfs_t;
+	type devpts_t;
+	class filesystem mount;
+	class filesystem unmount;
+
+	type null_device_t;
+	type zero_device_t;
+	type devtty_t;
+	type random_device_t;
+	type urandom_device_t;
+	class chr_file mounton;
+
+	class dir mounton;
+
+	type proc_kcore_t;
+	class file mounton;
+
+	type device_t;
+	class filesystem remount;
+
+	type sysctl_irq_t;
+
+	type fixed_disk_device_t;
+	class blk_file setattr;
+
+	type fs_t;
+
+	type cgroup_t;
+
+	type sysctl_t;
+
+	type unlabeled_t;
+	class chr_file getattr;
+	class chr_file setattr;
+	class chr_file unlink;
+
+	type kernel_t;
+	class system syslog_read;
+
+	type iptables_t;
+	type container_file_t;
+	class dir ioctl;
+
+	type init_t;
+	type unconfined_service_t;
+	class process siginh;
+
+	type chkpwd_t;
+	type user_devpts_t;
+	class chr_file { read write };
+
+	type proc_kmsg_t;
+
+	type ramfs_t;
+
+	type sysctl_kernel_t;
+	class dir read;
+}
+
+#============= container_init_t ==============
+allow container_init_t proc_t:filesystem { mount unmount remount };
+allow container_init_t sysfs_t:filesystem { mount unmount remount };
+allow container_init_t tmpfs_t:filesystem { mount unmount remount };
+allow container_init_t devpts_t:filesystem mount;
+allow container_init_t null_device_t:chr_file { mounton setattr };
+allow container_init_t zero_device_t:chr_file mounton;
+allow container_init_t devtty_t:chr_file mounton;
+allow container_init_t random_device_t:chr_file mounton;
+allow container_init_t urandom_device_t:chr_file mounton;
+allow container_init_t proc_t:dir mounton;
+allow container_init_t proc_kcore_t:file mounton;
+allow container_init_t device_t:filesystem { unmount remount};
+allow container_init_t proc_t:file mounton;
+allow container_init_t sysctl_irq_t:dir mounton;
+allow container_init_t fixed_disk_device_t:blk_file setattr;
+allow container_init_t fs_t:filesystem remount;
+allow container_init_t cgroup_t:filesystem remount;
+allow container_init_t sysctl_t:dir mounton;
+allow container_init_t sysctl_t:file mounton;
+allow container_init_t unlabeled_t:chr_file { getattr unlink };
+allow container_init_t kernel_t:system syslog_read;
+allow iptables_t container_file_t:dir ioctl;
+allow init_t unconfined_service_t:process siginh;
+allow chkpwd_t user_devpts_t:chr_file { read write };
+allow container_init_t proc_kmsg_t:file mounton;
+allow container_init_t ramfs_t:filesystem mount;
+allow init_t chkpwd_t:process siginh;
+allow container_init_t ramfs_t:dir read;
+allow container_init_t sysctl_kernel_t:file mounton;
