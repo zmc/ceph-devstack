@@ -106,8 +106,13 @@ def check_requirements():
         )
 
     # SELinux
-    result = result and check_selinux_bool("container_manage_cgroup")
-    result = result and check_selinux_bool("container_use_devices")
+    selinux_sysfs = Path("/sys/fs/selinux")
+    if (
+        selinux_sysfs.exists()
+        and (selinux_sysfs / "enforce").read_text().strip() == "1"
+    ):
+        result = result and check_selinux_bool("container_manage_cgroup")
+        result = result and check_selinux_bool("container_use_devices")
 
     # podman DNS plugin
     dns_plugin_path = "/usr/libexec/cni/dnsname"
