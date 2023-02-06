@@ -7,6 +7,7 @@ from packaging.version import parse as parse_version, Version
 from typing import Dict
 
 from ceph_devstack import logger
+from ceph_devstack.util import selinux_enforcing
 
 
 def get_info() -> Dict:
@@ -87,8 +88,9 @@ def check_requirements():
         )
 
     # SELinux
-    result = result and check_selinux_bool("container_manage_cgroup")
-    result = result and check_selinux_bool("container_use_devices")
+    if selinux_enforcing():
+        result = result and check_selinux_bool("container_manage_cgroup")
+        result = result and check_selinux_bool("container_use_devices")
 
     # podman DNS plugin
     dns_plugin_path = "/usr/libexec/cni/dnsname"
