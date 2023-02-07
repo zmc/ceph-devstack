@@ -19,6 +19,8 @@ def main():
         if not (check_requirements() and obj.check_requirements()):
             logger.error("Requirements not met!")
             sys.exit(1)
+        if args.command == "doctor":
+            return
         await obj.apply(args.command)
 
     try:
