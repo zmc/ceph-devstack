@@ -7,6 +7,7 @@ from packaging.version import parse as parse_version, Version
 from typing import Dict
 
 from ceph_devstack import logger
+from ceph_devstack.util import selinux_enforcing
 
 """
 The podman info command returns a ton of useful information; we should use
@@ -106,11 +107,7 @@ def check_requirements():
         )
 
     # SELinux
-    selinux_sysfs = Path("/sys/fs/selinux")
-    if (
-        selinux_sysfs.exists()
-        and (selinux_sysfs / "enforce").read_text().strip() == "1"
-    ):
+    if selinux_enforcing():
         result = result and check_selinux_bool("container_manage_cgroup")
         result = result and check_selinux_bool("container_use_devices")
 

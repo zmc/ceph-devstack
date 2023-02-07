@@ -7,7 +7,6 @@ import subprocess
 import tempfile
 
 from collections import OrderedDict
-from pathlib import Path
 
 from ceph_devstack import Config, logger, PROJECT_ROOT
 from ceph_devstack.resources.misc import Secret, Network
@@ -21,7 +20,7 @@ from ceph_devstack.resources.ceph.containers import (
     Teuthology,
     Archive,
 )
-from ceph_devstack.util import get_local_hostname
+from ceph_devstack.util import get_local_hostname, selinux_enforcing
 
 
 class SSHKeyPair(Secret):
@@ -130,12 +129,7 @@ class CephDevStack:
 
         # Check for SELinux being enabled and Enforcing; then check for the presence of our
         # module. If necessary, inform the user and instruct them how to build and install.
-        selinux_sysfs = Path("/sys/fs/selinux")
-        if (
-            has_sudo
-            and selinux_sysfs.exists()
-            and (selinux_sysfs / "enforce").read_text().strip() == "1"
-        ):
+        if has_sudo and selinux_enforcing():
             out = subprocess.check_output(["sudo", "semodule", "-l"]).decode()
             if "ceph_devstack" not in out.split("\n"):
                 result = False

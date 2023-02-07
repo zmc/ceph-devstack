@@ -2,6 +2,7 @@ import asyncio
 import os
 import socket
 
+from pathlib import Path
 from typing import Dict, Optional
 
 from ceph_devstack import logger
@@ -30,3 +31,11 @@ def get_local_hostname():
         return name
     except socket.gaierror:
         return "localhost"
+
+
+def selinux_enforcing():
+    selinux_enforcing_path = Path("/sys/fs/selinux/enforce")
+    return (
+        selinux_enforcing_path.exists()
+        and selinux_enforcing_path.read_text().strip() == "1"
+    )
