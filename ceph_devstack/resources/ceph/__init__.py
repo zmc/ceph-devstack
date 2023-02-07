@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 
 from collections import OrderedDict
+from pathlib import Path
 
 from ceph_devstack import Config, logger, PROJECT_ROOT
 from ceph_devstack.resources.misc import Secret, Network
@@ -139,6 +140,13 @@ class CephDevStack:
                     f"Try: (cd {PROJECT_ROOT} && make -f /usr/share/selinux/devel/Makefile "
                     "ceph_devstack.pp && sudo semodule -i ceph_devstack.pp)"
                 )
+
+        teuthology_repo = Path(Config.teuthology_repo)
+        if not teuthology_repo.exists():
+            result = False
+            logger.error(
+                f"Teuthology repository not found at {teuthology_repo}. Try placing one there, or using the --teuthology-repo flag."
+            )
         return result
 
     async def apply(self, action):
