@@ -101,8 +101,8 @@ def check_requirements():
         )
 
     # sysctl settings for OSD
-    result = result and check_sysctl_value("fs.aio-max-nr", 1048576)
-    result = result and check_sysctl_value("kernel.pid_max", 4194304)
+    check_sysctl_value("fs.aio-max-nr", 1048576)
+    check_sysctl_value("kernel.pid_max", 4194304)
 
     return result
 

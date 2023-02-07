@@ -16,10 +16,9 @@ def main():
     obj = CephDevStack()
 
     async def run():
-        check_requirements()
-        obj.check_requirements()
-        if args.command == "doctor":
-            return
+        if not (check_requirements() and obj.check_requirements()):
+            logger.error("Requirements not met!")
+            sys.exit(1)
         await obj.apply(args.command)
 
     try:

@@ -150,8 +150,6 @@ class CephDevStack:
         return result
 
     async def apply(self, action):
-        if not self.check_requirements():
-            raise RuntimeError("Requirements not met!")
         return await getattr(self, action)()
 
     async def get_container_names(self, kind):
