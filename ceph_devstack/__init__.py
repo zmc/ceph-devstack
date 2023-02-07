@@ -149,3 +149,7 @@ class Config:
                     logger.debug(f"Using value from config: {k}={v}")
                     setattr(cls.args, k, v)
         return cls.args
+
+
+class RequirementsNotMet(RuntimeError):
+    pass
