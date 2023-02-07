@@ -52,7 +52,9 @@ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 ```
 
 ## Usage
-Note: `ceph-devstack` currently must be run from within the root directory of a `teuthology` repo.
+Note: `ceph-devstack` expects to find a `teuthology` repository at
+`~/src/teuthology`; it's possibile to override that location with the
+`--teuthology-repo` flag.
 
 First, you'll want to build all the containers:
 
