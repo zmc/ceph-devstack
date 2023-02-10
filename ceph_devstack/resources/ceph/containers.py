@@ -208,8 +208,8 @@ class TestNode(Container):
         # cephadm tries to access these DMI-related files, and by default they
         # have 600 permissions on the host. It appears to be ok if they are
         # empty, though.
-        "-v",
-        "/dev/null:/sys/class/dmi/id/board_serial",
+        # "-v",
+        # "/dev/null:/sys/class/dmi/id/board_serial",
         "-v",
         "/dev/null:/sys/class/dmi/id/chassis_serial",
         "-v",
