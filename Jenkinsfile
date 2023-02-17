@@ -23,8 +23,6 @@ pipeline {
     stage("Setup ceph-devstack") {
       steps {
         sh """
-          python3 -m venv venv
-          source ./venv/bin/activate
           python3 -V
           python3 -m venv venv
           source ./venv/bin/activate
