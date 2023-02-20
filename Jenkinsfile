@@ -36,9 +36,9 @@ pipeline {
           python -V
           pip3 install -U pip
           pip3 install -e .
-          ceph-devstack doctor
           echo "data_dir: ${env.WORKSPACE}/data" > ${env.CDS_CONF}
           echo "teuthology_repo: ${env.WORKSPACE}/teuthology" >> ${env.CDS_CONF}
+          ceph-devstack --config-file ${env.CDS_CONF} doctor
         """
       }
     }
