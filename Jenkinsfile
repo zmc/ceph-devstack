@@ -20,6 +20,13 @@ pipeline {
         """
       }
     }
+    stage("Clone teuthology") {
+      steps {
+        sh """
+        git clone -b ${env.TEUTHOLOGY_BRANCH} https://github.com/ceph/teuthology ${env.WORKSPACE}/teuthology
+        """
+      }
+    }
     stage("Setup ceph-devstack") {
       steps {
         sh """
@@ -32,13 +39,6 @@ pipeline {
           ceph-devstack doctor
           echo "data_dir: ${env.WORKSPACE}/data" > ${env.CDS_CONF}
           echo "teuthology_repo: ${env.WORKSPACE}/teuthology" >> ${env.CDS_CONF}
-        """
-      }
-    }
-    stage("Clone teuthology") {
-      steps {
-        sh """
-        git clone -b ${env.TEUTHOLOGY_BRANCH} https://github.com/ceph/teuthology ${env.WORKSPACE}/teuthology
         """
       }
     }
