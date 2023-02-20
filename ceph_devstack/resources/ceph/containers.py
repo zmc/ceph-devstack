@@ -329,6 +329,7 @@ class Teuthology(Container):
             f"testnode_count={Config.args.testnode_count}",
             "--network",
             "ceph-devstack",
+            "--systemd=always",
             "--secret",
             "id_rsa",
             "-v",
