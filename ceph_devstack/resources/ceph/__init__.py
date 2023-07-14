@@ -127,6 +127,9 @@ class CephDevStack:
                 f"Cannot write to {loop_control}. "
                 f"Try: sudo usermod -a -G {group_name} {getpass.getuser()}"
             )
+            logger.warning(
+                "Note that group modifications require a logout to take effect."
+            )
 
         # Check for SELinux being enabled and Enforcing; then check for the presence of our
         # module. If necessary, inform the user and instruct them how to build and install.
