@@ -140,7 +140,7 @@ class CephDevStack:
                 logger.error(
                     "SELinux is in Enforcing mode. To run nested rootless podman containers, "
                     "it is necessary to install ceph-devstack's SELinux module. "
-                    f"Try: (cd {PROJECT_ROOT} && make -f /usr/share/selinux/devel/Makefile "
+                    f"Try: (sudo dnf install policycoreutils-devel selinux-policy-devel && cd {PROJECT_ROOT} && make -f /usr/share/selinux/devel/Makefile "
                     "ceph_devstack.pp && sudo semodule -i ceph_devstack.pp)"
                 )
 
