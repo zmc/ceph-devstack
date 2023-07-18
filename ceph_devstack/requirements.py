@@ -17,7 +17,11 @@ def get_info() -> Dict:
 
 def check_requirements():
     result = True
-    podman_info = get_info()
+    try:
+        podman_info = get_info()
+    except FileNotFoundError:
+        logger.error("podman not found. Try: dnf install podman")
+        return False
     storage_conf_path = podman_info["store"]["configFile"]
     containers_conf_path = Path(storage_conf_path).parent / "containers.conf"
     host_os = podman_info["host"].get("Os") or podman_info["host"]["os"]
