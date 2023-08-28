@@ -87,7 +87,7 @@ def check_requirements():
         result = False
         logger.error(
             f"The configured runtime is '{runtime}'. "
-            f"It must be set to 'overlay' in {containers_conf_path}. "
+            f"It must be set to 'crun' in {containers_conf_path}. "
             f"Afterward, run 'podman system reset'."
         )
 
