@@ -13,7 +13,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("ceph-devstack")
 
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).parent
 
 
 def represent_path(dumper: yaml.dumper.SafeDumper, data: PosixPath) -> yaml.Node:
