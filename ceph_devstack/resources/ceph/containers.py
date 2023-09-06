@@ -357,6 +357,8 @@ class Teuthology(Container):
         "MACHINE_TYPE": "",
         "TESTNODES": "",
         "TEUTHOLOGY_SUITE": "",
+        "TEUTHOLOGY_SUITE_BRANCH": "",
+        "TEUTHOLOGY_SUITE_REPO": "",
         "TEUTH_BRANCH": "",
     }
 
