@@ -7,6 +7,7 @@ import os
 import subprocess
 
 from logging import ERROR, INFO
+from pathlib import Path
 from subprocess import CalledProcessError
 from typing import List, Dict, Set, Optional
 
@@ -98,6 +99,8 @@ class PodmanResource:
         for k in self.cmd_vars:
             v = getattr(self, k, None)
             if v is not None:
+                if isinstance(v, Path):
+                    v = v.expanduser()
                 vars[k] = v
         return [s.format(**vars) for s in args]
 

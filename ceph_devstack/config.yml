@@ -1,0 +1,17 @@
+containers:
+  postgres:
+    image: "quay.io/ceph-infra/teuthology-postgresql:latest"
+  paddles:
+    image: "quay.io/ceph-infra/paddles:latest"
+  beanstalk:
+    image: "quay.io/ceph-infra/teuthology-beanstalkd:latest"
+  archive:
+    image: "python:alpine"
+  pulpito:
+    image: "quay.io/ceph-infra/pulpito:latest"
+  testnode:
+    count: 3
+    image: "quay.io/ceph-infra/teuthology-testnode:latest"
+  teuthology:
+    image: "quay.io/ceph-infra/teuthology-dev:devstack-simplified"
+data_dir: ~/.local/share/ceph-devstack

@@ -1,14 +1,14 @@
 import os
 
+from pathlib import Path
 from typing import List
 
-from ceph_devstack import Config
+from ceph_devstack import config
 from ceph_devstack.resources.container import Container
 from ceph_devstack.util import get_local_hostname
 
 
 class Postgres(Container):
-    image = "docker.io/library/postgres:14"
     create_cmd = [
         "podman",
         "container",
@@ -16,8 +16,6 @@ class Postgres(Container):
         "-i",
         "--network",
         "ceph-devstack",
-        "-v",
-        "./containers/postgres/db:/docker-entrypoint-initdb.d/:Z",
         "-p",
         "5432:5432",
         "--health-cmd",
@@ -40,21 +38,9 @@ class Postgres(Container):
         "APP_DB_NAME": "paddles",
     }
 
-    @property
-    def cwd(self):
-        return Config.teuthology_repo
 
-
-class Beanstalkd(Container):
-    image = "beanstalkd:latest"
+class Beanstalk(Container):
     _name = "beanstalk"
-    build_cmd = [
-        "podman",
-        "build",
-        "-t",
-        "{image}",
-        "./containers/beanstalk/alpine/",
-    ]
     create_cmd = [
         "podman",
         "container",
@@ -69,13 +55,8 @@ class Beanstalkd(Container):
         "{image}",
     ]
 
-    @property
-    def cwd(self):
-        return Config.teuthology_repo
-
 
 class Paddles(Container):
-    image = "quay.io/ceph-infra/paddles:latest"
     create_cmd = [
         "podman",
         "container",
@@ -106,7 +87,6 @@ class Paddles(Container):
 
 
 class Archive(Container):
-    image = "python:alpine"
     cmd_vars: List[str] = ["name", "image", "archive_dir"]
     create_cmd = [
         "podman",
@@ -131,11 +111,10 @@ class Archive(Container):
 
     @property
     def archive_dir(self):
-        return Config.data_dir / "archive"
+        return Path(config["data_dir"]) / "archive"
 
 
 class Pulpito(Container):
-    image = "quay.io/ceph-infra/pulpito:latest"
     create_cmd = [
         "podman",
         "container",
@@ -163,9 +142,7 @@ class Pulpito(Container):
 
 
 class TestNode(Container):
-    image = "testnode:latest"
     cmd_vars: List[str] = ["name", "image", "loop_dev_name"]
-    build_cmd = ["podman", "build", "-t", "{image}", "./containers/testnode/"]
     capabilities = [
         "SYS_ADMIN",
         "NET_ADMIN",
@@ -238,12 +215,8 @@ class TestNode(Container):
         self.loop_dev_name = f"/dev/loop{self.loop_index}"
 
     @property
-    def cwd(self):
-        return Config.teuthology_repo
-
-    @property
     def loop_img_dir(self):
-        return Config.data_dir / "disk_images"
+        return Path(config["data_dir"]) / "disk_images"
 
     async def create(self):
         if not await self.exists():
@@ -306,13 +279,13 @@ class TestNode(Container):
 
 
 class Teuthology(Container):
-    image = "teuthology:latest"
-    cmd_vars: List[str] = ["name", "image", "archive_dir"]
-    build_cmd = [
+    cmd_vars: List[str] = ["name", "image", "image_tag", "archive_dir"]
+
+    build_cmd: List[str] = [
         "podman",
         "build",
         "-t",
-        "teuthology",
+        "{name}:{image_tag}",
         "-f",
         "./containers/teuthology-dev/Dockerfile",
         ".",
@@ -326,13 +299,11 @@ class Teuthology(Container):
             "create",
             "-i",
             "--label",
-            f"testnode_count={Config.args.testnode_count}",
+            f"testnode_count={config['containers']['testnode']['count']}",
             "--network",
             "ceph-devstack",
             "--secret",
             "id_rsa",
-            "-v",
-            "./containers/teuthology-dev/teuthology.sh:/teuthology.sh:Z",
             "-v",
             "{archive_dir}:/archive_dir:z",
         ]
@@ -354,21 +325,19 @@ class Teuthology(Container):
     env_vars = {
         "SSH_PRIVKEY": "",
         "SSH_PRIVKEY_FILE": "",
-        "MACHINE_TYPE": "",
-        "TESTNODES": "",
+        "TEUTHOLOGY_MACHINE_TYPE": "",
+        "TEUTHOLOGY_TESTNODES": "",
+        "TEUTHOLOGY_BRANCH": "",
+        "TEUTHOLOGY_CEPH_BRANCH": "",
+        "TEUTHOLOGY_CEPH_REPO": "",
         "TEUTHOLOGY_SUITE": "",
         "TEUTHOLOGY_SUITE_BRANCH": "",
         "TEUTHOLOGY_SUITE_REPO": "",
-        "TEUTH_BRANCH": "",
     }
 
     @property
-    def cwd(self):
-        return Config.teuthology_repo
-
-    @property
     def archive_dir(self):
-        return Config.data_dir / "archive"
+        return Path(config["data_dir"]) / "archive"
 
     async def create(self):
         os.makedirs(self.archive_dir, exist_ok=True)

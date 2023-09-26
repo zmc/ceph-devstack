@@ -1,10 +1,9 @@
 import argparse
 import logging
-import os
 import yaml
 
 from pathlib import Path, PosixPath
-from typing import List
+from typing import List, Optional
 
 
 logging.basicConfig(
@@ -14,6 +13,7 @@ logging.basicConfig(
 logger = logging.getLogger("ceph-devstack")
 
 PROJECT_ROOT = Path(__file__).parent
+DEFAULT_CONFIG_PATH = Path("~/.config/ceph-devstack/config.yml")
 
 
 def represent_path(dumper: yaml.dumper.SafeDumper, data: PosixPath) -> yaml.Node:
@@ -44,37 +44,19 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Be more verbose",
     )
     parser.add_argument(
-        "--data-dir",
-        type=Path,
-        default=Path("~/.local/share/ceph-devstack"),
-        help="Store temporary data e.g. disk images here",
-    )
-    parser.add_argument(
         "--config-file",
         type=Path,
-        default=Path("~/.config/ceph-devstack/config.yml"),
+        default=DEFAULT_CONFIG_PATH,
         help="Path to the ceph-devstack config file",
-    )
-    parser.add_argument(
-        "--ceph-repo",
-        type=Path,
-        default=Path("~/src/ceph"),
-        help="Path to ceph repository",
-    )
-    parser.add_argument(
-        "--teuthology-repo",
-        type=Path,
-        default=Path("~/src/teuthology"),
-        help="Path to teuthology repository",
-    )
-    parser.add_argument(
-        "--testnode-count",
-        type=int,
-        default=3,
-        help="How many testnode containers to create",
     )
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("doctor", help="Check that the system meets requirements")
+    parser_pull = subparsers.add_parser("pull", help="Pull container images")
+    parser_pull.add_argument(
+        "image",
+        nargs="*",
+        help="Specific image(s) to pull",
+    )
     parser_build = subparsers.add_parser("build", help="Build container images")
     parser_build.add_argument(
         "image",
@@ -106,46 +88,37 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     subparsers.add_parser(
         "watch", help="Monitor the cluster, recreating containers as necessary"
     )
-    parsed_args = parser.parse_args(args)
-    return parsed_args
+    subparsers.add_parser("show-conf", help="show the configuration")
+    return parser.parse_args(args)
 
 
-class Config:
-    args = parse_args([])
-    storeable_args = ["teuthology_repo", "ceph_repo", "data_dir"]
+def deep_merge(*maps):
+    result = {}
+    for map in maps:
+        for k, v in map.items():
+            if isinstance(v, dict):
+                v = deep_merge(result.get(k, {}), v)
+            result[k] = v
+    return result
 
-    @classmethod
-    @property
-    def config_file(cls) -> Path:
-        return Path(cls.args.config_file).expanduser()
 
-    @classmethod
-    @property
-    def data_dir(cls) -> Path:
-        return Path(cls.args.data_dir).expanduser()
+class Config(dict):
+    def load(self, config_path: Optional[Path] = None):
+        self.update(yaml.safe_load((Path(__file__).parent / "config.yml").read_text()))
+        if config_path:
+            user_path = config_path.expanduser()
+            if user_path.exists():
+                user_obj = yaml.safe_load(user_path.read_text())
+                self.update(deep_merge(config, user_obj))
+            elif user_path != DEFAULT_CONFIG_PATH.expanduser():
+                raise OSError(f"Config file at {user_path} not found!")
 
-    @classmethod
-    @property
-    def teuthology_repo(cls) -> Path:
-        return Path(cls.args.teuthology_repo).expanduser()
 
-    @classmethod
-    @property
-    def ceph_repo(cls) -> Path:
-        return Path(cls.args.ceph_repo).expanduser()
+yaml.SafeDumper.add_representer(
+    Config,
+    yaml.representer.SafeRepresenter.represent_dict,
+)
 
-    @classmethod
-    def save(cls):
-        os.makedirs(cls.config_file.parent, exist_ok=True)
-        conf_obj = {key: getattr(cls.args, key) for key in cls.storeable_args}
-        cls.config_file.write_text(yaml.safe_dump(conf_obj))
 
-    @classmethod
-    def load(cls):
-        if cls.config_file.exists():
-            obj = yaml.safe_load(cls.config_file.read_text())
-            for k, v in obj.items():
-                if getattr(cls.args, k) != v:
-                    logger.debug(f"Using value from config: {k}={v}")
-                    setattr(cls.args, k, v)
-        return cls.args
+config = Config()
+config.load()

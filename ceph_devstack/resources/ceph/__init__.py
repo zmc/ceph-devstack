@@ -9,12 +9,12 @@ import tempfile
 from collections import OrderedDict
 from pathlib import Path
 
-from ceph_devstack import Config, logger, PROJECT_ROOT
+from ceph_devstack import config, logger, PROJECT_ROOT
 from ceph_devstack.resources.misc import Secret, Network
 from ceph_devstack.resources import CalledProcessError
 from ceph_devstack.resources.ceph.containers import (
     Postgres,
-    Beanstalkd,
+    Beanstalk,
     Paddles,
     Pulpito,
     TestNode,
@@ -88,7 +88,7 @@ class CephDevStack:
             [
                 (Postgres, 1),
                 (Paddles, 1),
-                (Beanstalkd, 1),
+                (Beanstalk, 1),
                 (Pulpito, 1),
                 (Teuthology, 1),
                 (TestNode, await self.get_testnode_count()),
@@ -100,9 +100,9 @@ class CephDevStack:
         teuth = Teuthology()
         try:
             data = await teuth.inspect()
-            return int(data[0]["Config"]["Labels"]["testnode_count"])
+            return int(data[0]["config"]["Labels"]["testnode_count"])
         except (KeyError, IndexError, CalledProcessError):
-            return Config.args.testnode_count
+            return config["containers"]["testnode"]["count"]
 
     def check_requirements(self):
         result = True
@@ -144,12 +144,10 @@ class CephDevStack:
                     "ceph_devstack.pp && sudo semodule -i ceph_devstack.pp)"
                 )
 
-        teuthology_repo = Path(Config.teuthology_repo)
-        if not teuthology_repo.exists():
-            result = False
-            logger.error(
-                f"Teuthology repository not found at {teuthology_repo}. Try placing one there, or using the --teuthology-repo flag."
-            )
+        for name, obj in config["containers"].items():
+            if (repo := obj.get("repo")) and not Path(repo).exists():
+                result = False
+                logger.error(f"Repo for {name} not found at {repo}")
         return result
 
     async def apply(self, action):
@@ -162,9 +160,17 @@ class CephDevStack:
             return [f"{name}_{i}" for i in range(count)]
         return [""]
 
+    async def pull(self):
+        logger.info("Pulling images...")
+        images = config["args"]["image"]
+        for kind in (await self.get_containers()).keys():
+            if images and str(kind.__name__).lower() not in images:
+                continue
+            await kind().pull()
+
     async def build(self):
         logger.info("Building images...")
-        images = Config.args.image
+        images = config["args"]["image"]
         for kind in (await self.get_containers()).keys():
             if images and str(kind.__name__).lower() not in images:
                 continue

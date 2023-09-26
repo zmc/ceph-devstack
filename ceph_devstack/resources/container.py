@@ -4,43 +4,83 @@ import os
 
 from typing import Dict, List, Optional
 
-from ceph_devstack import Config, logger
+from ceph_devstack import config, logger
 from ceph_devstack.resources import PodmanResource
 
 
 class Container(PodmanResource):
-    image: str
     network: str
     secret: List[str]
-    cmd_vars: List[str] = ["name", "image"]
-    build_cmd: List[str]
+    cmd_vars: List[str] = ["name", "image", "image_tag"]
+    build_cmd: List[str] = [
+        "podman",
+        "build",
+        "-t",
+        "{name}:{image_tag}",
+        ".",
+    ]
     create_cmd: List[str] = ["podman", "container", "create", "{name}"]
     remove_cmd: List[str] = ["podman", "container", "rm", "-f", "{name}"]
     start_cmd: List[str] = ["podman", "container", "start", "{name}"]
     stop_cmd: List[str] = ["podman", "container", "stop", "{name}"]
     exists_cmd: List[str] = ["podman", "container", "inspect", "{name}"]
+    pull_cmd: List[str] = ["podman", "pull", "{image}"]
     env_vars: Dict[str, Optional[str]] = {}
 
     def __init__(self, name: str = ""):
         super().__init__(name)
         self.env_vars = {**self.__class__.env_vars}
         for key in self.env_vars:
-            if key in os.environ:
+            if os.environ.get(key):
                 self.env_vars[key] = os.environ[key]
 
     def add_env_to_args(self, args: List):
         args = super().format_cmd(args)
         for key, value in self.env_vars.items():
+            if not value:
+                continue
             args.insert(-1, "-e")
             args.insert(-1, f"{key}={value}")
         return args
 
-    async def build(self):
-        if not getattr(self, "build_cmd", None):
+    @property
+    def config(self):
+        return config["containers"][self.__class__.__name__.lower()]
+
+    @property
+    def image(self):
+        if self.repo:
+            return f"localhost/{self.name}"
+        return self.config.get("image")
+
+    @property
+    def image_tag(self):
+        if ":" not in self.image:
+            return "latest"
+        return self.image.split(":")[-1]
+
+    @property
+    def repo(self):
+        return self.config.get("repo")
+
+    @property
+    def cwd(self):
+        return self.repo or "."
+
+    async def pull(self):
+        if not getattr(self, "pull_cmd", None):
             return
-        logger.debug(f"{self.name}: building")
+        logger.debug(f"{self.name}: pulling from: {self.image}")
+        await self.cmd(self.format_cmd(self.pull_cmd), check=True)
+
+    async def build(self):
+        if not getattr(self, "repo", None):
+            return
+        logger.debug(f"{self.name}: building from repo: {self.repo}")
         await self.cmd(
-            self.format_cmd(self.build_cmd), check=True, log_output=Config.args.verbose
+            self.format_cmd(self.build_cmd),
+            check=True,
+            log_output=config["args"]["verbose"],
         )
         logger.debug(f"{self.name}: built")
 

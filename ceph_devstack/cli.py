@@ -1,18 +1,22 @@
 import asyncio
 import logging
 import sys
+import yaml
 
-from ceph_devstack import Config, logger, parse_args
+from ceph_devstack import config, logger, parse_args
 from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
 
 
 def main():
     args = parse_args(sys.argv[1:])
-    Config.args = args
+    config.load(args.config_file)
     if args.verbose:
         logger.setLevel(logging.DEBUG)
-    Config.load()
+    if args.command == "show-conf":
+        print(yaml.safe_dump(config))
+        return
+    config["args"] = vars(args)
     obj = CephDevStack()
 
     async def run():

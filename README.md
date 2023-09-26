@@ -51,18 +51,36 @@ source ./venv/bin/activate
 python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 ```
 
+## Configuration
+`ceph-devstack` 's default configuration is [here](./ceph_devstack/config.yml). It can be extended by placing a file at `~/.config/ceph-devstack/config.yml` or by using the `--config-file` flag.
+
+`ceph-devstack show-conf` will output the current configuration.
+
+As an example, the following configuration will use a local image for paddles with the tag `TEST`; it will also create ten testnode containers; and will build its teuthology container from the git repo at `~/src/teuthology`:
+```
+containers:
+  paddles:
+    image: localhost/paddles:TEST
+  testnode:
+    count: 10
+  teuthology:
+    repo: ~/src/teuthology
+```
 ## Usage
-Note: `ceph-devstack` expects to find a `teuthology` repository at
-`~/src/teuthology`; it's possibile to override that location with the
-`--teuthology-repo` flag.
+By default, pre-built container images are pulled from [quay.io/ceph-infra](https://quay.io/organization/ceph-infra). The images can be overridden via the config file. It's also possible to _build_ images from on-disk git repositories.
 
-First, you'll want to build all the containers:
+First, you'll want to pull all the images:
 
+```bash
+ceph-devstack pull
+```
+
+Optional: If building any images from repos:
 ```bash
 ceph-devstack build
 ```
 
-Next, you can start them with:
+Next, you can start the containers with:
 
 ```bash
 ceph-devstack start
@@ -105,15 +123,6 @@ It's possible to skip the automatic suite-scheduling behavior:
 export TEUTHOLOGY_SUITE=none
 ```
 
-### Testnode Count
-We default to providing three testnode containers. If you want more, you can:
-
-```bash
-ceph-devstack create --testnode-count N
-```
-
-This value will be stored as a label on the teuthology container when it is created, so subsequent `start`, `watch`, `stop` and `remove` invocations won't require the flag to be passed again.
-
 ### Using testnodes from an existing lab
 If you need to use "real" testnodes and have access to a lab, there are a few additonal steps to take. We will use the Sepia lab as an example below:
 
@@ -121,12 +130,6 @@ To give the teuthology container access to your SSH private key (via `podman sec
 
 ```bash
 export SSH_PRIVKEY_PATH=$HOME/.ssh/id_rsa
-```
-
-To use an ansible "secrets" or "inventory" repo:
-
-```bash
-$ export ANSIBLE_INVENTORY_PATH=$HOME/src/ceph-sepia-secrets
 ```
 
 To lock machines from the lab:
@@ -142,6 +145,6 @@ ssh teuthology.front.sepia.ceph.com
 Once you have your machines locked, you need to provide a list of their hostnames and their machine type:
 
 ```bash
-export TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepia.ceph.com"
-export MACHINE_TYPE="smithi"
+export TEUTHOLOGY_TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepia.ceph.com"
+export TEUTHOLOGY_MACHINE_TYPE="smithi"
 ```
