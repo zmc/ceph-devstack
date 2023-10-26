@@ -25,7 +25,7 @@ def get_local_hostname():
     If the value of socket.gethostname() is resolvable to an IP, return that.
     Else, return "localhost"
     """
-    name = socket.gethostname()
+    name = socket.getfqdn()
     try:
         socket.gethostbyname(name)
         return name
