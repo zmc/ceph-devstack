@@ -3,6 +3,8 @@ import logging
 import sys
 import yaml
 
+from pathlib import Path
+
 from ceph_devstack import config, logger, parse_args
 from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
@@ -17,6 +19,8 @@ def main():
         print(yaml.safe_dump(config))
         return
     config["args"] = vars(args)
+    data_path = Path(config["data_dir"]).expanduser()
+    data_path.mkdir(parents=True, exist_ok=True)
     obj = CephDevStack()
 
     async def run():
