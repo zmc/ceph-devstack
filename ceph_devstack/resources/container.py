@@ -61,7 +61,11 @@ class Container(PodmanResource):
 
     @property
     def repo(self):
-        return self.config.get("repo")
+        repo = self.config.get("repo", "")
+        try:
+            return repo.expanduser()
+        except AttributeError:
+            return os.path.expanduser(repo)
 
     @property
     def cwd(self):
