@@ -145,7 +145,7 @@ class CephDevStack:
                 )
 
         for name, obj in config["containers"].items():
-            if (repo := obj.get("repo")) and not Path(repo).exists():
+            if (repo := obj.get("repo")) and not Path(repo).expanduser().exists():
                 result = False
                 logger.error(f"Repo for {name} not found at {repo}")
         return result
