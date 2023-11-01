@@ -74,6 +74,8 @@ class Container(PodmanResource):
     async def pull(self):
         if not getattr(self, "pull_cmd", None):
             return
+        if self.image.startswith("localhost/"):
+            return
         logger.debug(f"{self.name}: pulling from: {self.image}")
         await self.cmd(self.format_cmd(self.pull_cmd), check=True)
 
