@@ -5,7 +5,7 @@ import yaml
 
 from pathlib import Path
 
-from ceph_devstack import config, logger, parse_args
+from ceph_devstack import config, logger, parse_args, VERBOSE
 from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
 
@@ -14,7 +14,9 @@ def main():
     args = parse_args(sys.argv[1:])
     config.load(args.config_file)
     if args.verbose:
-        logger.setLevel(logging.DEBUG)
+        for handler in logging.getLogger("root").handlers:
+            if not isinstance(handler, logging.FileHandler):
+                handler.setLevel(VERBOSE)
     if args.command == "show-conf":
         print(yaml.safe_dump(config))
         return

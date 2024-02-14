@@ -1,15 +1,14 @@
 import argparse
-import logging
+import logging.config
 import yaml
 
 from pathlib import Path, PosixPath
 from typing import List, Optional
 
 
-logging.basicConfig(
-    format="%(message)s",
-    level=logging.INFO,
-)
+VERBOSE = 15
+logging.addLevelName(15, "VERBOSE")
+logging.config.fileConfig("./logging.conf")
 logger = logging.getLogger("ceph-devstack")
 
 PROJECT_ROOT = Path(__file__).parent
@@ -44,6 +43,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Be more verbose",
     )
     parser.add_argument(
+        "-c",
         "--config-file",
         type=Path,
         default=DEFAULT_CONFIG_PATH,
