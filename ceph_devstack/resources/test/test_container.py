@@ -3,6 +3,7 @@ import pytest
 
 from unittest.mock import patch, AsyncMock, Mock
 
+from ceph_devstack import config
 from ceph_devstack.resources.container import Container
 from ceph_devstack.resources.test.test_podmanresource import (
     TestPodmanResource as _TestPodmanResource,
@@ -20,6 +21,9 @@ class TestContainer(_TestPodmanResource):
     def action(self, request):
         return request.param
 
+    def setup_method(self):
+        config["containers"]["container"] = {"image": "example.com/image:latest"}
+
     @pytest.mark.parametrize("rc,res", ([0, True], [1, False]))
     async def test_exists_yes(self, cls, rc, res):
         with patch.object(cls, "cmd"):
@@ -33,7 +37,11 @@ class TestContainer(_TestPodmanResource):
             output_obj = [{"State": {"Status": "running"}}]
             m_read = Mock(return_value=json.dumps(output_obj))
             m_stdout = Mock(read=m_read)
-            obj.cmd.return_value = AsyncMock(stdout=m_stdout, returncode=0)
+            obj.cmd.return_value = AsyncMock(
+                stdout=m_stdout,
+                returncode=0,
+                wait=lambda: 0,
+            )
             assert await obj.is_running() is True
 
     async def test_is_running_no_bc_status(self, cls):
@@ -42,7 +50,11 @@ class TestContainer(_TestPodmanResource):
             output_obj = [{"State": {"Status": "crashed"}}]
             m_read = Mock(return_value=json.dumps(output_obj))
             m_stdout = Mock(read=m_read)
-            obj.cmd.return_value = AsyncMock(stdout=m_stdout, returncode=0)
+            obj.cmd.return_value = AsyncMock(
+                stdout=m_stdout,
+                returncode=0,
+                wait=lambda: 0,
+            )
             assert await obj.is_running() is False
 
     async def test_is_running_no_bc_dne(self, cls):

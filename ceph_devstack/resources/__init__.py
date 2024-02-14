@@ -2,17 +2,15 @@
 import argparse
 import asyncio
 import json
-import io
 import os
 import subprocess
 
-from logging import ERROR, INFO
 from pathlib import Path
 from subprocess import CalledProcessError
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set
 
 from ceph_devstack import logger
-from ceph_devstack.util import async_cmd
+from ceph_devstack.host import host, local_host
 
 
 class DevStack:
@@ -52,46 +50,24 @@ class PodmanResource:
             return self._name
         return self.__class__.__name__.lower()
 
-    async def _handle_output(
-        self,
-        proc_stream: asyncio.StreamReader,
-        our_stream: io.StringIO,
-        log: bool,
-        logLevel: int,
-    ):
-        while not proc_stream.at_eof():
-            line = (await proc_stream.readline()).decode()
-            our_stream.write(line)
-            line = line.rstrip()
-            if line and log:
-                logger.log(logLevel, f"{self.name}: {line}")
-        our_stream.seek(0)
-
     async def cmd(
         self,
         args: List[str],
-        kwargs: Optional[Dict] = None,
         check: bool = False,
-        log_output: bool = False,
+        force_local: bool = False,
     ) -> asyncio.subprocess.Process:
-        kwargs = kwargs or {}
+        exec_host = local_host if force_local else host
         if self.cwd != ".":
-            kwargs["cwd"] = str(self.cwd)
-        stderr = io.StringIO()
-        stdout = io.StringIO()
-        proc = await async_cmd(args, kwargs)
-        await asyncio.gather(
-            proc.wait(),
-            self._handle_output(proc.stderr, stderr, log_output, ERROR),
-            self._handle_output(proc.stdout, stdout, log_output, INFO),
-        )
-        if check and proc.returncode != 0:
-            if not log_output:
-                logger.error(stderr.read())
-                stderr.seek(0)
-            raise CalledProcessError(cmd=args, returncode=proc.returncode)
-        proc.stderr = stderr
-        proc.stdout = stdout
+            proc = await exec_host.arun(args, cwd=Path(self.cwd))
+        else:
+            proc = await exec_host.arun(args)
+        assert proc.stderr is not None
+        assert proc.stdout is not None
+        returncode = await proc.wait()
+        if check and returncode != 0:
+            out = await proc.stderr.read()
+            logger.error(out.decode())
+            raise CalledProcessError(cmd=args, returncode=returncode)
         return proc
 
     def format_cmd(self, args: List):
@@ -112,13 +88,18 @@ class PodmanResource:
 
     async def inspect(self):
         proc = await self.cmd(self.format_cmd(self.exists_cmd))
+        out, err = await proc.communicate()
+        return json.loads(out)
         return json.loads(proc.stdout.read())
+        if proc.stdout is None:
+            return {}
+        return json.loads((await proc.stdout.read()).decode())
 
-    async def exists(self, proc: Optional[asyncio.subprocess.Process] = None):
+    async def exists(self):
         if not self.exists_cmd:
             return False
-        proc = proc or await self.cmd(self.format_cmd(self.exists_cmd), check=False)
-        return proc.returncode == 0
+        proc = await self.cmd(self.format_cmd(self.exists_cmd), check=False)
+        return await proc.wait() == 0
 
     async def create(self):
         if not await self.exists():

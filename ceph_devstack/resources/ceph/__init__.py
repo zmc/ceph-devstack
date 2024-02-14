@@ -1,17 +1,14 @@
 import asyncio
 import contextlib
-import grp
-import getpass
 import os
-import subprocess
 import tempfile
 
 from collections import OrderedDict
-from pathlib import Path
+from subprocess import CalledProcessError
 
 from ceph_devstack import config, logger, PROJECT_ROOT
+from ceph_devstack.host import host
 from ceph_devstack.resources.misc import Secret, Network
-from ceph_devstack.resources import CalledProcessError
 from ceph_devstack.resources.ceph.containers import (
     Postgres,
     Beanstalk,
@@ -21,7 +18,6 @@ from ceph_devstack.resources.ceph.containers import (
     Teuthology,
     Archive,
 )
-from ceph_devstack.util import get_local_hostname, selinux_enforcing
 
 
 class SSHKeyPair(Secret):
@@ -45,7 +41,7 @@ class SSHKeyPair(Secret):
     async def exists(self):
         for exists_cmd in self.exists_cmds:
             proc = await self.cmd(self.format_cmd(exists_cmd), check=False)
-            if proc.returncode:
+            if await proc.wait():
                 return False
         return True
 
@@ -69,7 +65,9 @@ class SSHKeyPair(Secret):
                 dir="/tmp",
             )
             await self.cmd(
-                ["ssh-keygen", "-t", "rsa", "-N", "", "-f", privkey_path], check=True
+                ["ssh-keygen", "-t", "rsa", "-N", "", "-f", privkey_path],
+                check=True,
+                force_local=True,
             )
             self.pubkey_path = f"{privkey_path}.pub"
         self.privkey_path = privkey_path
@@ -104,48 +102,63 @@ class CephDevStack:
         except (KeyError, IndexError, CalledProcessError):
             return config["containers"]["testnode"]["count"]
 
-    def check_requirements(self):
+    async def check_requirements(self):
         result = True
 
-        try:
-            subprocess.check_call(["sudo", "-v"])
+        if has_sudo := host.run(["sudo", "true"]).returncode == 0:
             has_sudo = True
-        except subprocess.CalledProcessError:
+        else:
             has_sudo = False
             result = False
             logger.error("sudo access is required")
 
         loop_control = "/dev/loop-control"
-        if not os.path.exists(loop_control):
+        if not host.path_exists(loop_control):
             result = False
             logger.error(f"{loop_control} does not exist!")
-        elif not os.access(loop_control, os.W_OK):
+        elif host.run(["test", "-w", loop_control]).wait() != 0:
             result = False
-            stat = os.stat(loop_control)
-            group_name = grp.getgrgid(stat.st_gid).gr_name
-            logger.error(
-                f"Cannot write to {loop_control}. "
-                f"Try: sudo usermod -a -G {group_name} {getpass.getuser()}"
+            group = (
+                host.run(["stat", "--printf", "%G", loop_control])
+                .communicate()[0]
+                .decode()
             )
-            logger.warning(
-                "Note that group modifications require a logout to take effect."
-            )
+            user = host.run(["whoami"]).communicate()[0].strip().decode()
+            if host.type == "local":
+                logger.error(
+                    f"Cannot write to {loop_control}. "
+                    f"Try: sudo usermod -a -G {group} {user}"
+                )
+                logger.warning(
+                    "Note that group modifications require a logout to take effect."
+                )
+            else:
+                logger.error(
+                    f"Cannot write to {loop_control}. "
+                    f"Try: sudo chgrp {user} {loop_control}"
+                )
 
-        # Check for SELinux being enabled and Enforcing; then check for the presence of our
-        # module. If necessary, inform the user and instruct them how to build and install.
-        if has_sudo and selinux_enforcing():
-            out = subprocess.check_output(["sudo", "semodule", "-l"]).decode()
+        # Check for SELinux being enabled and Enforcing; then check for the
+        # presence of our module. If necessary, inform the user and instruct
+        # them how to build and install.
+        if has_sudo and await host.selinux_enforcing():
+            proc = await host.arun(["sudo", "semodule", "-l"])
+            assert proc.stdout is not None
+            await proc.wait()
+            out = (await proc.stdout.read()).decode()
             if "ceph_devstack" not in out.split("\n"):
                 result = False
                 logger.error(
-                    "SELinux is in Enforcing mode. To run nested rootless podman containers, "
-                    "it is necessary to install ceph-devstack's SELinux module. "
-                    f"Try: (sudo dnf install policycoreutils-devel selinux-policy-devel && cd {PROJECT_ROOT} && make -f /usr/share/selinux/devel/Makefile "
-                    "ceph_devstack.pp && sudo semodule -i ceph_devstack.pp)"
+                    "SELinux is in Enforcing mode. To run nested rootless podman "
+                    "containers, it is necessary to install ceph-devstack's SELinux "
+                    "module. Try: (sudo dnf install policycoreutils-devel "
+                    f"selinux-policy-devel && cd {PROJECT_ROOT} && make -f "
+                    "/usr/share/selinux/devel/Makefile ceph_devstack.pp && sudo "
+                    "semodule -i ceph_devstack.pp)"
                 )
 
         for name, obj in config["containers"].items():
-            if (repo := obj.get("repo")) and not Path(repo).expanduser().exists():
+            if (repo := obj.get("repo")) and not host.path_exists(repo):
                 result = False
                 logger.error(f"Repo for {name} not found at {repo}")
         return result
@@ -193,9 +206,11 @@ class CephDevStack:
             for name in await self.get_container_names(kind):
                 await kind(name=name).start()
         logger.info(
-            "All containers are running. To monitor teuthology, try running: podman logs -f teuthology"
+            "All containers are running. To monitor teuthology, try running: podman "
+            "logs -f teuthology"
         )
-        logger.info(f"View test results at http://{get_local_hostname()}:8081/")
+        hostname = host.hostname()
+        logger.info(f"View test results at http://{hostname}:8081/")
 
     async def stop(self):
         logger.info("Stopping containers...")

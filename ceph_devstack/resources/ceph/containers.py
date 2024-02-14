@@ -1,11 +1,15 @@
 import os
+import sys
 
 from pathlib import Path
 from typing import List
 
 from ceph_devstack import config
+from ceph_devstack.host import host
 from ceph_devstack.resources.container import Container
-from ceph_devstack.util import get_local_hostname
+
+
+ARCHIVE_MOUNT_SUFFIX = "" if sys.platform == "darwin" else ":z"
 
 
 class Postgres(Container):
@@ -81,7 +85,7 @@ class Paddles(Container):
     env_vars = {
         "PADDLES_SERVER_HOST": "0.0.0.0",
         "PADDLES_SQLALCHEMY_URL": "postgresql+psycopg2://admin:password@postgres:5432/paddles",
-        "PADDLES_JOB_LOG_HREF_TEMPL": f"http://{get_local_hostname()}:8000"
+        "PADDLES_JOB_LOG_HREF_TEMPL": f"http://{host.hostname()}:8000"
         "/{run_name}/{job_id}/teuthology.log",
     }
 
@@ -98,7 +102,7 @@ class Archive(Container):
         "-p",
         "8000:8000",
         "-v",
-        "{archive_dir}:/archive:z",
+        "{archive_dir}:/archive" + ARCHIVE_MOUNT_SUFFIX,
         "--name",
         "{name}",
         "{image}",
@@ -217,7 +221,7 @@ class TestNode(Container):
 
     @property
     def loop_img_dir(self):
-        return Path(config["data_dir"]) / "disk_images"
+        return (Path(config["data_dir"]) / "disk_images").expanduser()
 
     async def create(self):
         if not await self.exists():
@@ -232,7 +236,7 @@ class TestNode(Container):
         size_gb = 5
         os.makedirs(self.loop_img_dir, exist_ok=True)
         proc = await self.cmd(["lsmod", "|", "grep", "loop"])
-        if proc and proc.returncode != 0:
+        if proc and await proc.wait() != 0:
             await self.cmd(["sudo", "modprobe", "loop"])
         loop_img_name = os.path.join(self.loop_img_dir, self.loop_img_name)
         await self.remove_loop_device()
@@ -272,10 +276,10 @@ class TestNode(Container):
         loop_img_name = os.path.join(self.loop_img_dir, self.loop_img_name)
         if os.path.ismount(self.loop_dev_name):
             await self.cmd(["umount", self.loop_dev_name], check=True)
-        if os.path.exists(self.loop_dev_name):
+        if host.path_exists(self.loop_dev_name):
             await self.cmd(["sudo", "losetup", "-d", self.loop_dev_name])
             await self.cmd(["sudo", "rm", "-f", self.loop_dev_name], check=True)
-        if os.path.exists(loop_img_name):
+        if host.path_exists(loop_img_name):
             os.remove(loop_img_name)
 
 
@@ -306,7 +310,7 @@ class Teuthology(Container):
             "--secret",
             "id_rsa",
             "-v",
-            "{archive_dir}:/archive_dir:z",
+            "{archive_dir}:/archive_dir" + ARCHIVE_MOUNT_SUFFIX,
         ]
         ansible_inv = os.environ.get("ANSIBLE_INVENTORY_PATH")
         if ansible_inv:
@@ -341,5 +345,5 @@ class Teuthology(Container):
         return Path(config["data_dir"]) / "archive"
 
     async def create(self):
-        os.makedirs(self.archive_dir, exist_ok=True)
+        self.archive_dir.expanduser().resolve().mkdir(parents=True, exist_ok=True)
         await super().create()

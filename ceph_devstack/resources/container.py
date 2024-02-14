@@ -45,13 +45,13 @@ class Container(PodmanResource):
 
     @property
     def config(self):
-        return config["containers"][self.__class__.__name__.lower()]
+        return config["containers"].get(self.__class__.__name__.lower(), {})
 
     @property
     def image(self):
         if self.repo:
             return f"localhost/{self.name}"
-        return self.config.get("image")
+        return self.config["image"]
 
     @property
     def image_tag(self):
@@ -86,7 +86,6 @@ class Container(PodmanResource):
         await self.cmd(
             self.format_cmd(self.build_cmd),
             check=True,
-            log_output=config["args"]["verbose"],
         )
         logger.debug(f"{self.name}: built")
 
@@ -97,8 +96,7 @@ class Container(PodmanResource):
             return
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.debug(f"{self.name}: creating")
-        kwargs = {}
-        await self.cmd(args, kwargs, check=True)
+        await self.cmd(args, check=True)
         logger.debug(f"{self.name}: created")
 
     async def start(self):
@@ -109,11 +107,10 @@ class Container(PodmanResource):
         if "--health-cmd" in self.create_cmd or "--healthcheck-cmd" in self.create_cmd:
             rc = None
             while rc != 0:
-                result = await self.cmd(
+                proc = await self.cmd(
                     self.format_cmd(["podman", "healthcheck", "run", "{name}"]),
-                    kwargs={"env": self.env_vars},
                 )
-                rc = result.returncode
+                rc = await proc.wait()
                 await asyncio.sleep(1)
         logger.debug(f"{self.name}: started")
 
@@ -133,9 +130,10 @@ class Container(PodmanResource):
 
     async def is_running(self):
         proc = await self.cmd(self.format_cmd(self.exists_cmd))
-        if not await self.exists(proc):
+        assert proc.stdout is not None
+        if not await self.exists():
             return False
-        result = json.loads(proc.stdout.read())
+        result = json.loads(await proc.stdout.read())
         if not result:
             return False
         return result[0]["State"]["Status"].lower() == "running"

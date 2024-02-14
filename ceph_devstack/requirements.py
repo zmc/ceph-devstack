@@ -1,24 +1,14 @@
-import os
-import subprocess
-import yaml
-
 from pathlib import Path
 from packaging.version import parse as parse_version, Version
-from typing import Dict
 
 from ceph_devstack import logger
-from ceph_devstack.util import selinux_enforcing
+from ceph_devstack.host import host
 
 
-def get_info() -> Dict:
-    out = subprocess.check_output(["podman", "info"])
-    return yaml.safe_load(out.decode().strip())
-
-
-def check_requirements():
+async def check_requirements():
     result = True
     try:
-        podman_info = get_info()
+        podman_info = await host.podman_info()
     except FileNotFoundError:
         logger.error("podman not found. Try: dnf install podman")
         return False
@@ -45,8 +35,8 @@ def check_requirements():
     if not kernel_version >= version_for_overlay:
         needs_fuse = True
         logger.warning(
-            f"Kernel version ({kernel_version}) is too old to support native rootless overlayfs "
-            f"(needs {version_for_overlay})"
+            f"Kernel version ({kernel_version}) is too old to support native rootless "
+            f"overlayfs (needs {version_for_overlay})"
         )
     # podman version for native overlay
     podman_version = parse_version(podman_info["version"]["Version"])
@@ -59,9 +49,8 @@ def check_requirements():
         )
     # fuse-overlayfs presence if not using native overlay
     if needs_fuse:
-        try:
-            subprocess.check_call(["command", "-v", "fuse-overlayfs"])
-        except subprocess.CalledProcessError:
+        proc = await host.arun(["command", "-v", "fuse-overlayfs"])
+        if (await proc.wait()) >= 0:
             result = False
             logger.error(
                 "Could not find fuse-overlayfs. Try: dnf install fuse-overlayfs"
@@ -92,27 +81,31 @@ def check_requirements():
         )
 
     # SELinux
-    if selinux_enforcing():
+    if await host.selinux_enforcing():
         result = result and check_selinux_bool("container_manage_cgroup")
         result = result and check_selinux_bool("container_use_devices")
 
     # podman DNS plugin
     dns_plugin_path = "/usr/libexec/cni/dnsname"
-    if not os.path.exists(dns_plugin_path):
+    proc = await host.arun(["ls", dns_plugin_path])
+    if (await proc.wait()) != 0:
         result = False
         logger.error(
-            "Could not find the podman DNS plugin. Try: dnf install /usr/libexec/cni/dnsname"
+            "Could not find the podman DNS plugin. Try: "
+            "dnf install /usr/libexec/cni/dnsname"
         )
 
     # sysctl settings for OSD
-    check_sysctl_value("fs.aio-max-nr", 1048576)
-    check_sysctl_value("kernel.pid_max", 4194304)
+    result = result and await check_sysctl_value("fs.aio-max-nr", 1048576)
+    result = result and await check_sysctl_value("kernel.pid_max", 4194304)
 
     return result
 
 
-def check_selinux_bool(name):
-    out = subprocess.check_output(["getsebool", name])
+async def check_selinux_bool(name):
+    proc = await host.arun(["getsebool", name])
+    assert proc.stdout is not None
+    out = await proc.stdout.read()
     if out.decode().strip() != f"{name} --> on":
         logger.error(
             f"SELinux boolean '{name}' must be enabled. "
@@ -122,11 +115,15 @@ def check_selinux_bool(name):
     return True
 
 
-def check_sysctl_value(name: str, min_value: int):
-    out = subprocess.check_output(["sysctl", "-b", name])
+async def check_sysctl_value(name: str, min_value: int):
+    proc = await host.arun(["sysctl", "-b", name])
+    assert proc.stdout is not None
+    out = await proc.stdout.read()
     current_value = int(out.decode().strip())
     if current_value < min_value:
         logger.error(
             f"sysctl setting {name} ({current_value}) is too low. Try: "
             f"sysctl {name}={min_value}"
         )
+        return False
+    return True
