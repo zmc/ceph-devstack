@@ -13,5 +13,5 @@ containers:
     count: 3
     image: "quay.io/ceph-infra/teuthology-testnode:latest"
   teuthology:
-    image: "quay.io/ceph-infra/teuthology-dev:devstack-simplified"
+    image: "quay.io/ceph-infra/teuthology-dev:latest"
 data_dir: ~/.local/share/ceph-devstack

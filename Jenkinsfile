@@ -39,7 +39,11 @@ pipeline {
           python -V
           pip3 install -U pip
           pip3 install -e .
-          python3 -c "import yaml; print(yaml.safe_dump({'containers': {'teuthology': {'repo': '${env.WORKSPACE}/teuthology'}}, 'data_dir': '${env.WORKSPACE}/data'}))" > ${env.CDS_CONF}
+          if [ -z ${env.TEUTHOLOGY_BRANCH} ]; then
+            python3 -c "import yaml; print(yaml.safe_dump({'data_dir': '${env.WORKSPACE}/data'}))" > ${env.CDS_CONF}
+          else
+            python3 -c "import yaml; print(yaml.safe_dump({'containers': {'teuthology': {'repo': '${env.WORKSPACE}/teuthology'}}, 'data_dir': '${env.WORKSPACE}/data'}))" > ${env.CDS_CONF}
+          fi
           ceph-devstack --config-file ${env.CDS_CONF} show-conf
           ceph-devstack --config-file ${env.CDS_CONF} doctor
         """

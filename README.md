@@ -44,7 +44,7 @@ It is currently under active development and has not yet had a formal release.
 
 ```bash
 sudo usermod -a -G disk $(whoami)  # and re-login afterward
-git clone -b ceph-devstack https://github.com/ceph/teuthology/
+git clone https://github.com/ceph/teuthology/
 cd teuthology && ./bootstrap
 python3 -m venv venv
 source ./venv/bin/activate
