@@ -190,8 +190,12 @@ class TestNode(Container):
         # cephadm tries to access these DMI-related files, and by default they
         # have 600 permissions on the host. It appears to be ok if they are
         # empty, though.
-        "-v",
-        "/dev/null:/sys/class/dmi/id/board_serial",
+        # The below was bizarrely causing this error message:
+        # No such file or directory: OCI runtime attempted to invoke a command that was
+        # not found
+        # That was causing the container to fail to start up.
+        # "-v",
+        # "/dev/null:/sys/class/dmi/id/board_serial",
         "-v",
         "/dev/null:/sys/class/dmi/id/chassis_serial",
         "-v",
