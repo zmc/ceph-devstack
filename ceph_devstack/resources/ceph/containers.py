@@ -156,6 +156,7 @@ class TestNode(Container):
         "SYS_PTRACE",
         "SYS_TTY_CONFIG",
         "AUDIT_WRITE",
+        "AUDIT_CONTROL",
     ]
     create_cmd = [
         "podman",
