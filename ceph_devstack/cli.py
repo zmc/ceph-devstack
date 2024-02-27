@@ -26,7 +26,10 @@ def main():
     obj = CephDevStack()
 
     async def run():
-        if not (await check_requirements() and await obj.check_requirements()):
+        if not await asyncio.gather(
+            check_requirements(),
+            obj.check_requirements(),
+        ):
             logger.error("Requirements not met!")
             sys.exit(1)
         if args.command == "doctor":

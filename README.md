@@ -38,7 +38,7 @@ It is currently under active development and has not yet had a formal release.
   * `setsebool -P container_manage_cgroup=true`
   * `setsebool -P container_use_devices=true`
 
-`ceph-devstack doctor` will check the above and report any issues.
+`ceph-devstack doctor` will check the above and report any issues along with suggested remedies; its `--fix` flag will apply them for you.
 
 ## Setup
 

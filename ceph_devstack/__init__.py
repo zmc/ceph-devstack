@@ -50,7 +50,15 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Path to the ceph-devstack config file",
     )
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("doctor", help="Check that the system meets requirements")
+    parser_doc = subparsers.add_parser(
+        "doctor", help="Check that the system meets requirements"
+    )
+    parser_doc.add_argument(
+        "--fix",
+        action="store_true",
+        default=False,
+        help="Apply suggested fixes for issues found",
+    )
     parser_pull = subparsers.add_parser("pull", help="Pull container images")
     parser_pull.add_argument(
         "image",
