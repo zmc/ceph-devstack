@@ -119,7 +119,7 @@ class LoopControlDeviceWriteable(FixableRequirement):
 
 
 class SELinuxModule(FixableRequirement):
-    fix_cmd = [
+    fix_cmd_build = [
         "(sudo",
         "dnf",
         "install",
@@ -139,6 +139,12 @@ class SELinuxModule(FixableRequirement):
         "-i",
         "ceph_devstack.pp)",
     ]
+    fix_cmd_prebuilt = [
+        "sudo",
+        "semodule",
+        "-i",
+        str(PROJECT_ROOT / "ceph_devstack.pp"),
+    ]
     suggest_msg = (
         "SELinux is in Enforcing mode. To run nested rootless podman "
         "containers, it is necessary to install ceph-devstack's SELinux "
@@ -151,6 +157,13 @@ class SELinuxModule(FixableRequirement):
         await proc.wait()
         out = (await proc.stdout.read()).decode()
         return "ceph_devstack" in out.split("\n")
+
+    async def fix(self):
+        if self.host.type == "local":
+            self.fix_cmd = self.fix_cmd_build
+        else:
+            self.fix_cmd = self.fix_cmd_prebuilt
+        return await super().fix()
 
 
 class CephDevStack:
