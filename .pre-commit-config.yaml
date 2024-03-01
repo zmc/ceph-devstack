@@ -1,3 +1,5 @@
+exclude: 'ceph_devstack/ceph_devstack\.(te|pp)'
+
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v4.6.0

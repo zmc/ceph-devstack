@@ -1,0 +1,20 @@
+FROM quay.io/centos/centos:stream9 as build
+RUN \
+  dnf install -y \
+    policycoreutils-devel \
+    selinux-policy-devel \
+  && dnf clean all
+COPY ceph_devstack/ceph_devstack.te /ceph_devstack/
+RUN \
+  mkdir -p /ceph_devstack && \
+  cd /ceph_devstack && \
+  make \
+    -f \
+    /usr/share/selinux/devel/Makefile \
+    ceph_devstack.pp
+
+FROM scratch
+WORKDIR /ceph_devstack
+COPY --from=build /ceph_devstack/ceph_devstack.pp /ceph_devstack.pp
+COPY --from=build /bin/cat /bin/cat
+ENTRYPOINT /bin/cat
