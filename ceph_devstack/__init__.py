@@ -8,7 +8,7 @@ from typing import List, Optional
 
 VERBOSE = 15
 logging.addLevelName(15, "VERBOSE")
-logging.config.fileConfig("./logging.conf")
+logging.config.fileConfig(Path(__file__).parent / "logging.conf")
 logger = logging.getLogger("ceph-devstack")
 
 PROJECT_ROOT = Path(__file__).parent
