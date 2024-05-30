@@ -1,0 +1,38 @@
+name: CI
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: CI on python${{ matrix.python }} via ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            python: "3.12"
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install packages
+        run: sudo apt install podman golang-github-containernetworking-plugin-dnsname
+      - name: Create virtualenv
+        run: python3 -m venv venv
+      - name: Install
+        run: ./venv/bin/pip3 install -e .
+      - name: Doctor
+        run: ./venv/bin/ceph-devstack -v doctor
+      - name: Build
+        run: ./venv/bin/ceph-devstack -v build
+      - name: Create
+        run: ./venv/bin/ceph-devstack -v create
+      - name: Start
+        run: ./venv/bin/ceph-devstack -v start
+      - name: Wait
+        run: podman logs -f teuthology
+      - name: Stop
+        run: ./venv/bin/ceph-devstack -v stop
+      - name: Remove
+        run: ./venv/bin/ceph-devstack -v remove
