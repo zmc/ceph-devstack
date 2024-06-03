@@ -38,8 +38,8 @@ class Command:
         self.log_level = logging.DEBUG
 
     def _make_log_msg(self) -> str:
-        msg = "> " + " ".join(self.args)
-        if cwd := self.kwargs.get("cwd", ".") != ".":
+        msg = "> " + " ".join(self.args) + str(self.kwargs.get("cwd", "."))
+        if (cwd := self.kwargs.get("cwd", ".")) != ".":
             msg = f"{msg} cwd={cwd}"
         return msg
 
