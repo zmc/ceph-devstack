@@ -134,15 +134,16 @@ class CgroupV2(FixableRequirement):
 
 
 class PodmanVersion(Requirement):
+    def __init__(self, version: str, msg: str = ""):
+        self.required_version = parse_version(version)
+        self.msg = msg
+
     async def check(self):
         podman_info = await self.host.podman_info()
         podman_version = parse_version(podman_info["version"]["Version"])
-        version_for_overlay = Version("3.1")
-        if podman_version < version_for_overlay:
-            logger.warning(
-                "Podman version is too old for rootless native overlayfs"
-                f"(needs {version_for_overlay})"
-            )
+        if podman_version < self.required_version:
+            if self.msg:
+                logger.warning(self.msg)
             return False
         return True
 
@@ -209,8 +210,13 @@ async def check_requirements():
     result = True
     # kernel and podman versions for native overlay filesystem
     result = result and await PodmanGraphDriver().evaluate()
+    podman_overlay_version = "3.10"
+    podman_version_overlay = await PodmanVersion(
+        podman_overlay_version,
+        "Podman version is too old for rootless native overlayfs (needs {podman_overlay_version})",
+    ).evaluate()
     needs_fuse = not (
-        await KernelVersionForOverlay().evaluate() and await PodmanVersion().evaluate()
+        await KernelVersionForOverlay().evaluate() and podman_version_overlay
     )
     # if not using native overlay, we need fuse-overlayfs
     if needs_fuse:
@@ -229,7 +235,8 @@ async def check_requirements():
         result = result and await SELinuxBoolean("container_use_devices").evaluate()
 
     # podman DNS plugin
-    result = result and await PodmanDNSPlugin().evaluate()
+    if not await PodmanVersion("5.0").evaluate():
+        result = result and await PodmanDNSPlugin().evaluate()
 
     # sysctl settings for OSD
     result = result and await SysctlValue("fs.aio-max-nr", 1048576).evaluate()
