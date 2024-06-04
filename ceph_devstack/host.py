@@ -11,7 +11,6 @@ from typing import Dict, List, Optional, Union
 from .exec import Command
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 class Host:
@@ -22,8 +21,14 @@ class Host:
         args: List[str],
         cwd: Optional[pathlib.Path] = None,
         env: Optional[Dict] = None,
+        stream_output: bool = False,
     ) -> Command:
-        return Command(args, cwd=cwd, env=env)
+        return Command(
+            args,
+            cwd=cwd,
+            env=env,
+            stream_output=stream_output,
+        )
 
     def run(
         self,
@@ -38,8 +43,11 @@ class Host:
         args: List[str],
         cwd: Optional[pathlib.Path] = None,
         env: Optional[Dict] = None,
+        stream_output: bool = False,
     ):
-        return await self.cmd(args, cwd=cwd, env=env).arun()
+        return await self.cmd(
+            args, cwd=cwd, env=env, stream_output=stream_output
+        ).arun()
 
     def path_exists(self, path: Union[str, pathlib.Path]):
         if isinstance(path, pathlib.Path):
@@ -107,10 +115,11 @@ class RemoteHost(Host):
         args: List[str],
         cwd: Optional[pathlib.Path] = None,
         env: Optional[Dict] = None,
+        stream_output: bool = False,
     ):
         if args[0] != "podman":
             args = self.base_args + args
-        return super().cmd(args, cwd=cwd, env=env)
+        return super().cmd(args, cwd=cwd, env=env, stream_output=stream_output)
 
     def path_exists(self, path: Union[str, pathlib.Path]):
         path = os.path.expanduser(path)

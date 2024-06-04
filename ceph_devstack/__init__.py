@@ -116,7 +116,7 @@ class Config(dict):
         if config_path:
             user_path = config_path.expanduser()
             if user_path.exists():
-                user_obj = yaml.safe_load(user_path.read_text())
+                user_obj = yaml.safe_load(user_path.read_text()) or {}
                 self.update(deep_merge(config, user_obj))
             elif user_path != DEFAULT_CONFIG_PATH.expanduser():
                 raise OSError(f"Config file at {user_path} not found!")
