@@ -1,6 +1,6 @@
 import asyncio
+from asyncio.subprocess import SubprocessStreamProtocol
 import functools
-import logging
 import os
 import pathlib
 import subprocess
@@ -16,7 +16,10 @@ class LoggingStreamProtocol(asyncio.subprocess.SubprocessStreamProtocol):
         super().__init__(limit=limit, loop=loop)
 
     def pipe_data_received(self, fd, data):
-        logger.log(self.log_level, data.decode() if isinstance(data, bytes) else data)
+        logger.log(
+            self.log_level,
+            (data.decode() if isinstance(data, bytes) else str(data)).rstrip("\n"),
+        )
         super().pipe_data_received(fd, data)
 
 
@@ -26,6 +29,7 @@ class Command:
         args: List[str],
         cwd: Optional[pathlib.Path] = None,
         env: Optional[Dict] = None,
+        stream_output: bool = False,
     ):
         self.args = args
         self.env = os.environ | (env or {})
@@ -35,12 +39,12 @@ class Command:
         }
         if cwd:
             self.kwargs.update(cwd=cwd)
-        self.log_level = logging.DEBUG
+        self.stream_output = stream_output
 
     def _make_log_msg(self) -> str:
-        msg = "> " + " ".join(self.args) + str(self.kwargs.get("cwd", "."))
-        if (cwd := self.kwargs.get("cwd", ".")) != ".":
-            msg = f"{msg} cwd={cwd}"
+        msg = "> " + " ".join(self.args)
+        if (cwd := str(self.kwargs.get("cwd", "."))) != ".":
+            msg = f"{msg} cwd='{cwd}'"
         return msg
 
     def run(self) -> subprocess.Popen:
@@ -56,13 +60,22 @@ class Command:
     async def arun(self) -> asyncio.subprocess.Process:
         logger.log(VERBOSE, self._make_log_msg())
         loop = asyncio.get_running_loop()
-        transport, protocol = await loop.subprocess_exec(
-            functools.partial(
+        protocol_factory: functools.partial[SubprocessStreamProtocol]
+        if self.stream_output:
+            protocol_factory = functools.partial(
                 LoggingStreamProtocol,
                 limit=2**16,
                 loop=loop,
-                log_level=self.log_level,
-            ),
+                log_level=VERBOSE,
+            )
+        else:
+            protocol_factory = functools.partial(
+                asyncio.subprocess.SubprocessStreamProtocol,
+                limit=2**16,
+                loop=loop,
+            )
+        transport, protocol = await loop.subprocess_exec(
+            protocol_factory,
             *self.args,
             env=self.env,
             **self.kwargs,

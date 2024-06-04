@@ -77,7 +77,11 @@ class Container(PodmanResource):
         if self.image.startswith("localhost/"):
             return
         logger.debug(f"{self.name}: pulling from: {self.image}")
-        await self.cmd(self.format_cmd(self.pull_cmd), check=True)
+        await self.cmd(
+            self.format_cmd(self.pull_cmd),
+            check=True,
+            stream_output=True,
+        )
 
     async def build(self):
         if not getattr(self, "repo", None):
@@ -86,6 +90,7 @@ class Container(PodmanResource):
         await self.cmd(
             self.format_cmd(self.build_cmd),
             check=True,
+            stream_output=True,
         )
         logger.debug(f"{self.name}: built")
 
@@ -96,14 +101,22 @@ class Container(PodmanResource):
             return
         args = self.add_env_to_args(self.format_cmd(self.create_cmd))
         logger.debug(f"{self.name}: creating")
-        await self.cmd(args, check=True)
+        await self.cmd(
+            args,
+            check=True,
+            stream_output=True,
+        )
         logger.debug(f"{self.name}: created")
 
     async def start(self):
         if not getattr(self, "start_cmd", None):
             return
         logger.debug(f"{self.name}: starting")
-        await self.cmd(self.format_cmd(self.start_cmd), check=True)
+        await self.cmd(
+            self.format_cmd(self.start_cmd),
+            check=True,
+            stream_output=True,
+        )
         if "--health-cmd" in self.create_cmd or "--healthcheck-cmd" in self.create_cmd:
             rc = None
             while rc != 0:
@@ -118,7 +131,10 @@ class Container(PodmanResource):
         if not getattr(self, "stop_cmd", None):
             return
         logger.debug(f"{self.name}: stopping")
-        await self.cmd(self.format_cmd(self.stop_cmd))
+        await self.cmd(
+            self.format_cmd(self.stop_cmd),
+            stream_output=True,
+        )
         logger.debug(f"{self.name}: stopping")
 
     async def remove(self):
