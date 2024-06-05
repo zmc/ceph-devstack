@@ -15,6 +15,7 @@ pipeline {
           sudo dnf install -y podman podman-plugins python3-virtualenv policycoreutils-devel selinux-policy-devel
           sudo sysctl fs.aio-max-nr=1048576
           sudo usermod -a -G disk ${env.USER}
+          mkdir -p ~/.local/share/containers
           # The below command is not idempotent, hence the '|| true'.
           # See https://patchwork.kernel.org/project/selinux/patch/20240214122706.522873-1-vmojzis@redhat.com/
           sudo semanage fcontext -a -e /var/lib/containers ~/.local/share/containers || true
