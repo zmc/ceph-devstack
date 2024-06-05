@@ -53,11 +53,19 @@ pipeline {
         """
       }
     }
-    stage("Build containers") {
+    stage("Build container images") {
       steps {
         sh """
           source ./venv/bin/activate
           ceph-devstack -v --config-file ${env.CDS_CONF} build
+        """
+      }
+    }
+    stage("Pull container images") {
+      steps {
+        sh """
+          source ./venv/bin/activate
+          ceph-devstack -v --config-file ${env.CDS_CONF} pull
         """
       }
     }
