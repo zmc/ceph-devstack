@@ -95,4 +95,4 @@ allow container_init_t ramfs_t:dir read;
 allow container_init_t sysctl_kernel_t:file mounton;
 #allow container_init_t self:bpf prog_load;
 allow container_init_t devpts_t:filesystem remount;
-allow container_init_t system_map_t:file mounton;
+#allow container_init_t system_map_t:file mounton;
