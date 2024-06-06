@@ -61,6 +61,13 @@ require {
 
 	type sysctl_kernel_t;
 	class dir read;
+
+	type system_map_t;
+
+	type mtrr_device_t;
+
+	class bpf prog_load;
+	class bpf map_create;
 }
 
 #============= container_init_t ==============
@@ -93,3 +100,9 @@ allow container_init_t ramfs_t:filesystem mount;
 allow init_t chkpwd_t:process siginh;
 allow container_init_t ramfs_t:dir read;
 allow container_init_t sysctl_kernel_t:file mounton;
+allow container_init_t devpts_t:filesystem remount;
+allow container_init_t system_map_t:file mounton;
+allow container_init_t system_map_t:file mounton;
+allow container_init_t mtrr_device_t:file mounton;
+allow container_init_t self:bpf prog_load;
+allow container_init_t self:bpf map_create;

@@ -29,7 +29,7 @@ It is currently under active development and has not yet had a formal release.
 * Linux kernel 5.12+, or 4.15+ _and_ `fuse-overlayfs`
 * cgroup v2
   * On CentOS 8, see [./docs/cgroup_v2.md](./docs/cgroup_v2.md)
-* podman's DNS plugin, from the `podman-plugins` package
+* With podman <5.0, podman's DNS plugin, from the `podman-plugins` package
 * A user account that has `sudo` access and also is a member of the `disk` group
 * The following sysctl settings:
   * `fs.aio-max-nr=1048576`

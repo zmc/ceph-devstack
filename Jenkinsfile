@@ -13,6 +13,7 @@ pipeline {
         }
         sh """
           sudo dnf install -y podman podman-plugins python3-virtualenv policycoreutils-devel selinux-policy-devel
+          sudo dnf update -y container\\* podman\\* selinux\\*
           sudo sysctl fs.aio-max-nr=1048576
           sudo usermod -a -G disk ${env.USER}
           mkdir -p ~/.local/share/containers
