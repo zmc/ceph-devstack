@@ -34,9 +34,13 @@ def main():
             sys.exit(1)
         if args.command == "doctor":
             return
-        await obj.apply(args.command)
+        elif args.command == "wait":
+            return await obj.wait(container_name=args.container)
+        else:
+            await obj.apply(args.command)
+            return 0
 
     try:
-        asyncio.run(run())
+        sys.exit(asyncio.run(run()))
     except KeyboardInterrupt:
         logger.debug("Exiting!")
