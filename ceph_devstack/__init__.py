@@ -96,6 +96,14 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     subparsers.add_parser(
         "watch", help="Monitor the cluster, recreating containers as necessary"
     )
+    parser_wait = subparsers.add_parser(
+        "wait",
+        help="Wait for the specified container to exit. Exit with its exit code.",
+    )
+    parser_wait.add_argument(
+        "container",
+        help="The container to wait for",
+    )
     subparsers.add_parser("show-conf", help="show the configuration")
     return parser.parse_args(args)
 
