@@ -220,3 +220,12 @@ class CephDevStack:
                             await container.start()
             except KeyboardInterrupt:
                 break
+
+    async def wait(self, container_name: str):
+        for kind in (await self.get_containers()).keys():
+            for name in await self.get_container_names(kind):
+                container = kind(name=name)
+                if container.name == container_name:
+                    return await container.wait()
+        logger.error(f"Could not find container {container_name}")
+        return 1
