@@ -25,6 +25,7 @@ class Container(PodmanResource):
     stop_cmd: List[str] = ["podman", "container", "stop", "{name}"]
     exists_cmd: List[str] = ["podman", "container", "inspect", "{name}"]
     pull_cmd: List[str] = ["podman", "pull", "{image}"]
+    wait_cmd: List[str] = ["podman", "wait", "{name}"]
     env_vars: Dict[str, Optional[str]] = {}
 
     def __init__(self, name: str = ""):
@@ -153,3 +154,11 @@ class Container(PodmanResource):
         if not result:
             return False
         return result[0]["State"]["Status"].lower() == "running"
+
+    async def wait(self) -> Optional[int]:
+        proc = await self.cmd(self.format_cmd(self.wait_cmd))
+        out, err = await proc.communicate()
+        if proc.returncode:
+            logger.error(f"Could not wait for {self.name}: {err.decode().strip()}")
+            return proc.returncode
+        return int(out.decode().strip())
