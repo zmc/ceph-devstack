@@ -90,8 +90,8 @@ pipeline {
     stage("Wait for teuthology container") {
       steps {
         sh """
-          podman wait teuthology
-          exit \$(podman inspect -f "{{.State.ExitCode}}" teuthology)
+          source ./venv/bin/activate
+          ceph-devstack wait teuthology
         """
       }
     }
