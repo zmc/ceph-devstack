@@ -23,7 +23,7 @@ jobs:
       - name: Install
         run: ./venv/bin/pip3 install -e .
       - name: Doctor
-        run: ./venv/bin/ceph-devstack -v doctor
+        run: ./venv/bin/ceph-devstack -v doctor --fix
       - name: Build
         run: ./venv/bin/ceph-devstack -v build
       - name: Create
