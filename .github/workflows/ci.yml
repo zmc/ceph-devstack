@@ -33,6 +33,7 @@ jobs:
       - name: Wait
         run: ./venv/bin/ceph-devstack wait teuthology
       - name: Dump logs
+        if: success() || failure()
         run: podman logs -f teuthology
       - name: Stop
         run: ./venv/bin/ceph-devstack -v stop
