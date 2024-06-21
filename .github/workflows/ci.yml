@@ -31,6 +31,8 @@ jobs:
       - name: Start
         run: ./venv/bin/ceph-devstack -v start
       - name: Wait
+        run: ./venv/bin/ceph-devstack wait teuthology
+      - name: Dump logs
         run: podman logs -f teuthology
       - name: Stop
         run: ./venv/bin/ceph-devstack -v stop
