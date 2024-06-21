@@ -89,12 +89,8 @@ class PodmanResource:
 
     async def inspect(self):
         proc = await self.cmd(self.format_cmd(self.exists_cmd))
-        out, err = await proc.communicate()
+        out, _ = await proc.communicate()
         return json.loads(out)
-        return json.loads(proc.stdout.read())
-        if proc.stdout is None:
-            return {}
-        return json.loads((await proc.stdout.read()).decode())
 
     async def exists(self):
         if not self.exists_cmd:
