@@ -342,6 +342,7 @@ class Teuthology(Container):
         "TEUTHOLOGY_SUITE": "",
         "TEUTHOLOGY_SUITE_BRANCH": "",
         "TEUTHOLOGY_SUITE_REPO": "",
+        "TEUTHOLOGY_SUITE_EXTRA_ARGS": "",
     }
 
     @property
