@@ -1,7 +1,8 @@
 import pytest
 
+from pathlib import Path
 from subprocess import CalledProcessError
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 from ceph_devstack.resources import PodmanResource
 
@@ -45,11 +46,12 @@ class TestPodmanResource:
         with patch("ceph_devstack.host.host.arun") as m_arun:
             # at_eof() is not async, so the below lines avoid this warning:
             # RuntimeWarning: coroutine 'AsyncMockMixin._execute_mock_call' was never awaited
-            m_arun.return_value.stderr.at_eof = Mock()
-            m_arun.return_value.stdout.at_eof = Mock()
+            # m_arun.return_value.stderr.at_eof = Mock()
+            # m_arun.return_value.stdout.at_eof = Mock()
             obj = cls()
             await obj.cmd(["0"])
-            m_arun.assert_awaited_once_with(["0"])
+            print(m_arun.await_args_list)
+            m_arun.assert_awaited_once_with(["0"], cwd=Path("."), stream_output=False)
 
     async def test_cmd_failed(self, cls):
         obj = cls()
