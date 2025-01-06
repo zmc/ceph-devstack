@@ -22,6 +22,8 @@ jobs:
         run: python3 -m venv venv
       - name: Install
         run: ./venv/bin/pip3 install -e .
+      - name: Set owner for /dev/loop-control
+        run: sudo chown $(whoami) /dev/loop-control
       - name: Doctor
         run: ./venv/bin/ceph-devstack -v doctor --fix
       - name: Build
