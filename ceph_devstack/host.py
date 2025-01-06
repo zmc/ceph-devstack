@@ -71,6 +71,14 @@ class Host:
             self._kernel_version = parse_version(raw_version.split("-")[0])
         return self._kernel_version
 
+    def os_type(self) -> str:
+        if not hasattr(self, "_os_type"):
+            proc = self.run(["bash", "-c", ". /etc/os-release && echo $ID"])
+            assert proc.stdout is not None
+            assert proc.wait() == 0, "is /etc/os-release missing?"
+            self._os_type = proc.stdout.read().decode().strip().lower()
+        return self._os_type
+
     async def podman_info(self, force: bool = False) -> Dict:
         if force or not hasattr(self, "_podman_info"):
             proc = await self.arun(["podman", "info"])
