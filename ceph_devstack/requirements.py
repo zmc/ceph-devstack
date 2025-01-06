@@ -191,10 +191,24 @@ class SysctlValue(FixableRequirement):
 
 
 class PodmanDNSPlugin(FixableRequirement):
-    dns_plugin_path = "/usr/libexec/cni/dnsname"
-    check_cmd = ["test", "-x", dns_plugin_path]
     suggest_msg = "Could not find the podman DNS plugin"
-    fix_cmd = ["sudo", "dnf", "install", "-y", dns_plugin_path]
+
+    def __init__(self):
+        os_type = self.host.os_type()
+        if os_type == "centos":
+            dns_plugin_path = "/usr/libexec/cni/dnsname"
+            self.check_cmd = ["test", "-x", dns_plugin_path]
+            self.fix_cmd = ["sudo", "dnf", "install", "-y", dns_plugin_path]
+        elif os_type in ["ubuntu", "debian"]:
+            dns_plugin_path = "/usr/lib/cni/dnsname"
+            self.check_cmd = ["test", "-x", dns_plugin_path]
+            self.fix_cmd = [
+                "sudo",
+                "apt",
+                "install",
+                "-y",
+                "golang-github-containernetworking-plugin-dnsname",
+            ]
 
 
 class FuseOverlayfsPresence(FixableRequirement):
