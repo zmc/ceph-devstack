@@ -194,13 +194,13 @@ class PodmanDNSPlugin(FixableRequirement):
     dns_plugin_path = "/usr/libexec/cni/dnsname"
     check_cmd = ["test", "-x", dns_plugin_path]
     suggest_msg = "Could not find the podman DNS plugin"
-    fix_cmd = ["sudo", "dnf", "install", dns_plugin_path]
+    fix_cmd = ["sudo", "dnf", "install", "-y", dns_plugin_path]
 
 
 class FuseOverlayfsPresence(FixableRequirement):
     check_cmd = ["command", "-v", "fuse-overlayfs"]
     suggest_msg = "Could not find fuse-overlayfs"
-    fix_cmd = ["sudo", "dnf", "install", "fuse-overlayfs"]
+    fix_cmd = ["sudo", "dnf", "install", "-y", "fuse-overlayfs"]
 
 
 async def check_requirements():

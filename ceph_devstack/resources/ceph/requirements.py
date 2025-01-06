@@ -53,6 +53,7 @@ class SELinuxModule(FixableRequirement):
         "(sudo",
         "dnf",
         "install",
+        "-y",
         "policycoreutils-devel",
         "selinux-policy-devel",
         "&&",
