@@ -50,6 +50,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Path to the ceph-devstack config file",
     )
     subparsers = parser.add_subparsers(dest="command")
+    parser_config = subparsers.add_parser("config", help="Get or set config items")
+    subparsers_config = parser_config.add_subparsers(dest="config_op")
+    parser_config_get = subparsers_config.add_parser("get")
+    parser_config_get.add_argument("name")
+    parser_config_set = subparsers_config.add_parser("set")
+    parser_config_set.add_argument("name")
+    parser_config_set.add_argument("value")
     parser_doc = subparsers.add_parser(
         "doctor", help="Check that the system meets requirements"
     )

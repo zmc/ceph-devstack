@@ -20,6 +20,35 @@ def main():
     if args.command == "show-conf":
         print(yaml.safe_dump(config))
         return
+    if args.command == "config":
+        path = args.name.split(".")
+        sub_obj = obj = config
+        i = 0
+        if args.config_op == "get":
+            while i < len(path):
+                sub_path = path[i]
+                try:
+                    sub_obj = sub_obj[sub_path]
+                except KeyError:
+                    logger.error(f"{args.name} not found in config")
+                    sys.exit(1)
+                i += 1
+            print(yaml.safe_dump(sub_obj))
+            return
+        elif args.config_op == "set":
+            last_index = len(path) - 1
+            while i <= last_index:
+                # print(i)
+                if i < last_index:
+                    sub_obj = sub_obj[path[i]]
+                elif i == last_index:
+                    sub_obj[path[i]] = args.value
+                    print(config)
+                # print(path[i])
+                # print(sub_obj)
+                # print(config)
+                i += 1
+            return
     config["args"] = vars(args)
     data_path = Path(config["data_dir"]).expanduser()
     data_path.mkdir(parents=True, exist_ok=True)
