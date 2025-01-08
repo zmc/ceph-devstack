@@ -20,6 +20,12 @@ def main():
     if args.command == "show-conf":
         print(yaml.safe_dump(config))
         return
+    if args.command == "config":
+        if args.config_op == "get":
+            print(config.get_value(args.name))
+        elif args.config_op == "set":
+            config.set_value(args.name, args.value)
+        return
     config["args"] = vars(args)
     data_path = Path(config["data_dir"]).expanduser()
     data_path.mkdir(parents=True, exist_ok=True)

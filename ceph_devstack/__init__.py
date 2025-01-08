@@ -50,6 +50,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Path to the ceph-devstack config file",
     )
     subparsers = parser.add_subparsers(dest="command")
+    parser_config = subparsers.add_parser("config", help="Get or set config items")
+    subparsers_config = parser_config.add_subparsers(dest="config_op")
+    parser_config_get = subparsers_config.add_parser("get")
+    parser_config_get.add_argument("name")
+    parser_config_set = subparsers_config.add_parser("set")
+    parser_config_set.add_argument("name")
+    parser_config_set.add_argument("value")
     parser_doc = subparsers.add_parser(
         "doctor", help="Check that the system meets requirements"
     )
@@ -128,6 +135,36 @@ class Config(dict):
                 self.update(deep_merge(config, user_obj))
             elif user_path != DEFAULT_CONFIG_PATH.expanduser():
                 raise OSError(f"Config file at {user_path} not found!")
+
+    def get_value(self, name: str) -> str:
+        path = name.split(".")
+        obj = config
+        i = 0
+        while i < len(path):
+            sub_path = path[i]
+            try:
+                obj = obj[sub_path]
+            except KeyError:
+                logger.error(f"{name} not found in config")
+                raise
+            i += 1
+        if isinstance(obj, (str, int, bool)):
+            return str(obj)
+        return yaml.safe_dump(obj).strip()
+
+    def set_value(self, name: str, value: str):
+        path = name.split(".")
+        obj = config
+        i = 0
+        last_index = len(path) - 1
+        value = yaml.safe_load(value)
+        while i <= last_index:
+            if i < last_index:
+                obj = obj[path[i]]
+            elif i == last_index:
+                obj[path[i]] = value
+                print(yaml.safe_dump(config))
+            i += 1
 
 
 yaml.SafeDumper.add_representer(
