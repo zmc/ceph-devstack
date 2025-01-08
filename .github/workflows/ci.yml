@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install packages
-        run: sudo apt install podman golang-github-containernetworking-plugin-dnsname
+        run: sudo apt install podman golang-github-containernetworking-plugin-dnsname sqlite3
       - name: Create virtualenv
         run: python3 -m venv venv
       - name: Install
@@ -37,6 +37,11 @@ jobs:
       - name: Dump logs
         if: success() || failure()
         run: podman logs -f teuthology
+      - name: Dump job data
+        if: success() || failure()
+        run: |
+          podman cp paddles:/paddles/dev.db /tmp/
+          sqlite3 /tmp/dev.db ".output stdout" ".mode json" "select * from jobs"'
       - name: Stop
         run: ./venv/bin/ceph-devstack -v stop
       - name: Remove
