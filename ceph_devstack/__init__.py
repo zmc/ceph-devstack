@@ -1,9 +1,11 @@
 import argparse
 import logging.config
-import yaml
+import tomlkit
+import tomlkit.items
+import tomlkit.exceptions
 
-from pathlib import Path, PosixPath
-from typing import List, Optional
+from pathlib import Path
+from typing import List, Optional, Union
 
 
 VERBOSE = 15
@@ -12,17 +14,7 @@ logging.config.fileConfig(Path(__file__).parent / "logging.conf")
 logger = logging.getLogger("ceph-devstack")
 
 PROJECT_ROOT = Path(__file__).parent
-DEFAULT_CONFIG_PATH = Path("~/.config/ceph-devstack/config.yml")
-
-
-def represent_path(dumper: yaml.dumper.SafeDumper, data: PosixPath) -> yaml.Node:
-    return dumper.represent_scalar("tag:yaml.org,2002:str", str(data))
-
-
-yaml.SafeDumper.add_representer(
-    PosixPath,
-    represent_path,
-)
+DEFAULT_CONFIG_PATH = Path("~/.config/ceph-devstack/config.toml")
 
 
 def parse_args(args: List[str]) -> argparse.Namespace:
@@ -126,15 +118,20 @@ def deep_merge(*maps):
 
 
 class Config(dict):
+    __slots__ = ["user_obj", "user_path"]
+
     def load(self, config_path: Optional[Path] = None):
-        self.update(yaml.safe_load((Path(__file__).parent / "config.yml").read_text()))
+        parsed = tomlkit.parse((Path(__file__).parent / "config.toml").read_text())
+        self.update(parsed)
         if config_path:
-            user_path = config_path.expanduser()
-            if user_path.exists():
-                user_obj = yaml.safe_load(user_path.read_text()) or {}
-                self.update(deep_merge(config, user_obj))
-            elif user_path != DEFAULT_CONFIG_PATH.expanduser():
-                raise OSError(f"Config file at {user_path} not found!")
+            self.user_path = config_path.expanduser()
+            if self.user_path.exists():
+                self.user_obj: dict = tomlkit.parse(self.user_path.read_text()) or {}
+                self.update(deep_merge(config, self.user_obj))
+            elif self.user_path != DEFAULT_CONFIG_PATH.expanduser():
+                raise OSError(f"Config file at {self.user_path} not found!")
+            else:
+                self.user_obj = {}
 
     def get_value(self, name: str) -> str:
         path = name.split(".")
@@ -150,27 +147,29 @@ class Config(dict):
             i += 1
         if isinstance(obj, (str, int, bool)):
             return str(obj)
-        return yaml.safe_dump(obj).strip()
+        return tomlkit.dumps(obj).strip()
 
     def set_value(self, name: str, value: str):
         path = name.split(".")
-        obj = config
+        obj = self.user_obj
         i = 0
         last_index = len(path) - 1
-        value = yaml.safe_load(value)
+        item: Union[tomlkit.items.Item, str] = value
+        try:
+            item = tomlkit.value(item)
+        except tomlkit.exceptions.UnexpectedCharError:
+            pass
+        except tomlkit.exceptions.InternalParserError:
+            pass
         while i <= last_index:
             if i < last_index:
-                obj = obj[path[i]]
+                obj = obj.setdefault(path[i], {})
             elif i == last_index:
-                obj[path[i]] = value
-                print(yaml.safe_dump(config))
+                obj[path[i]] = item
+                self.update(self.user_obj)
+                self.user_path.parent.mkdir(exist_ok=True)
+                self.user_path.write_text(tomlkit.dumps(self.user_obj).strip())
             i += 1
-
-
-yaml.SafeDumper.add_representer(
-    Config,
-    yaml.representer.SafeRepresenter.represent_dict,
-)
 
 
 config = Config()
