@@ -44,6 +44,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command")
     parser_config = subparsers.add_parser("config", help="Get or set config items")
     subparsers_config = parser_config.add_subparsers(dest="config_op")
+    subparsers_config.add_parser("dump", help="show the configuration")
     parser_config_get = subparsers_config.add_parser("get")
     parser_config_get.add_argument("name")
     parser_config_set = subparsers_config.add_parser("set")
@@ -103,7 +104,6 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         "container",
         help="The container to wait for",
     )
-    subparsers.add_parser("show-conf", help="show the configuration")
     return parser.parse_args(args)
 
 
@@ -132,6 +132,9 @@ class Config(dict):
                 raise OSError(f"Config file at {self.user_path} not found!")
             else:
                 self.user_obj = {}
+
+    def dump(self):
+        return tomlkit.dumps(self)
 
     def get_value(self, name: str) -> str:
         path = name.split(".")

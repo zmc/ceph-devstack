@@ -50,7 +50,7 @@ pipeline {
           else
             python3 -c "import yaml; print(yaml.safe_dump({'containers': {'teuthology': {'repo': '${env.WORKSPACE}/teuthology'}}, 'data_dir': '${env.WORKSPACE}/data'}))" > ${env.CDS_CONF}
           fi
-          ceph-devstack --config-file ${env.CDS_CONF} show-conf
+          ceph-devstack --config-file ${env.CDS_CONF} config dump
           ceph-devstack --config-file ${env.CDS_CONF} doctor
         """
       }
