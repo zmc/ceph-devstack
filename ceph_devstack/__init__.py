@@ -44,6 +44,7 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     subparsers = parser.add_subparsers(dest="command")
     parser_config = subparsers.add_parser("config", help="Get or set config items")
     subparsers_config = parser_config.add_subparsers(dest="config_op")
+    subparsers_config.add_parser("dump")
     parser_config_get = subparsers_config.add_parser("get")
     parser_config_get.add_argument("name")
     parser_config_set = subparsers_config.add_parser("set")
@@ -131,6 +132,9 @@ class Config(dict):
                 self.update(deep_merge(config, self.user_obj))
             elif self.user_path != DEFAULT_CONFIG_PATH.expanduser():
                 raise OSError(f"Config file at {self.user_path} not found!")
+
+    def dump(self):
+        return tomlkit.dumps(self)
 
     def get_value(self, name: str) -> str:
         path = name.split(".")
