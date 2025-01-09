@@ -136,6 +136,36 @@ class Config(dict):
             elif user_path != DEFAULT_CONFIG_PATH.expanduser():
                 raise OSError(f"Config file at {user_path} not found!")
 
+    def get_value(self, name: str) -> str:
+        path = name.split(".")
+        obj = config
+        i = 0
+        while i < len(path):
+            sub_path = path[i]
+            try:
+                obj = obj[sub_path]
+            except KeyError:
+                logger.error(f"{name} not found in config")
+                raise
+            i += 1
+        if isinstance(obj, (str, int, bool)):
+            return str(obj)
+        return yaml.safe_dump(obj).strip()
+
+    def set_value(self, name: str, value: str):
+        path = name.split(".")
+        obj = config
+        i = 0
+        last_index = len(path) - 1
+        value = yaml.safe_load(value)
+        while i <= last_index:
+            if i < last_index:
+                obj = obj[path[i]]
+            elif i == last_index:
+                obj[path[i]] = value
+                print(yaml.safe_dump(config))
+            i += 1
+
 
 yaml.SafeDumper.add_representer(
     Config,
