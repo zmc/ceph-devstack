@@ -1,7 +1,6 @@
 import asyncio
 import logging
 import sys
-import yaml
 
 from pathlib import Path
 
@@ -17,10 +16,9 @@ def main():
         for handler in logging.getLogger("root").handlers:
             if not isinstance(handler, logging.FileHandler):
                 handler.setLevel(VERBOSE)
-    if args.command == "show-conf":
-        print(yaml.safe_dump(config))
-        return
     if args.command == "config":
+        if args.config_op == "dump":
+            print(config.dump())
         if args.config_op == "get":
             print(config.get_value(args.name))
         elif args.config_op == "set":

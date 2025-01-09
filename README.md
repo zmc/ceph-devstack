@@ -54,7 +54,7 @@ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 ## Configuration
 `ceph-devstack` 's default configuration is [here](./ceph_devstack/config.yml). It can be extended by placing a file at `~/.config/ceph-devstack/config.yml` or by using the `--config-file` flag.
 
-`ceph-devstack show-conf` will output the current configuration.
+`ceph-devstack config dump` will output the current configuration.
 
 As an example, the following configuration will use a local image for paddles with the tag `TEST`; it will also create ten testnode containers; and will build its teuthology container from the git repo at `~/src/teuthology`:
 ```
