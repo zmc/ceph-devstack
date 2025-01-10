@@ -172,6 +172,7 @@ class Config(dict):
             elif i == last_index:
                 obj[path[i]] = item
                 self.update(self.user_obj)
+                self.user_path.parent.mkdir(exist_ok=True)
                 self.user_path.write_text(tomlkit.dumps(self.user_obj).strip())
             i += 1
 
