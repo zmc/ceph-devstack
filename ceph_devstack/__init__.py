@@ -132,6 +132,8 @@ class Config(dict):
                 self.update(deep_merge(config, self.user_obj))
             elif self.user_path != DEFAULT_CONFIG_PATH.expanduser():
                 raise OSError(f"Config file at {self.user_path} not found!")
+            else:
+                self.user_obj = {}
 
     def dump(self):
         return tomlkit.dumps(self)
@@ -166,7 +168,7 @@ class Config(dict):
             pass
         while i <= last_index:
             if i < last_index:
-                obj = obj[path[i]]
+                obj = obj.setdefault(path[i], {})
             elif i == last_index:
                 obj[path[i]] = item
                 self.update(self.user_obj)
