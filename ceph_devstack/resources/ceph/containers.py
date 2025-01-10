@@ -42,6 +42,15 @@ class Postgres(Container):
         "APP_DB_NAME": "paddles",
     }
 
+    def __init__(self, name: str = ""):
+        super().__init__(name)
+        username = self.env_vars["APP_DB_USER"]
+        password = self.env_vars["APP_DB_PASS"]
+        db_name = self.env_vars["APP_DB_NAME"]
+        self.paddles_sqla_url = (
+            f"postgresql+psycopg2://{username}:{password}@postgres:5432/{db_name}"
+        )
+
 
 class Beanstalk(Container):
     _name = "beanstalk"
@@ -84,7 +93,6 @@ class Paddles(Container):
     ]
     env_vars = {
         "PADDLES_SERVER_HOST": "0.0.0.0",
-        "PADDLES_SQLALCHEMY_URL": "postgresql+psycopg2://admin:password@postgres:5432/paddles",
         "PADDLES_JOB_LOG_HREF_TEMPL": f"http://{host.hostname()}:8000"
         "/{run_name}/{job_id}/teuthology.log",
     }
