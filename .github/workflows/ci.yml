@@ -39,17 +39,31 @@ jobs:
       - name: Dump logs
         if: success() || failure()
         run: podman logs -f teuthology
+      - name: Create archive
+        if: success() || failure()
+        run: |
+          mkdir -p /tmp/artifacts
       - name: Dump job data
         if: success() || failure()
         run: |
           podman cp paddles:/paddles/dev.db /tmp/
-          sqlite3 /tmp/dev.db ".output stdout" ".mode json" "select * from jobs" | jq | tee /tmp/jobs.json
+          sqlite3 /tmp/dev.db ".output stdout" ".mode json" "select * from jobs" | jq | tee /tmp/artifacts/jobs.json
       - name: Upload jobs.json
         if: success() || failure()
         uses: actions/upload-artifact@v4
         with:
           name: jobs
-          path: /tmp/jobs.json
+          path: /tmp/artifacts/jobs.json
+      - name: Create tarball of log archive
+        if: success() || failure()
+        run: |
+          tar -czf /tmp/artifacts/archive.tar ~/.local/share/ceph-devstack/archive/
+      - name: Upload log archive
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: archive
+          path: /tmp/artifacts/archive.tar
       - name: Stop
         run: ./venv/bin/ceph-devstack -v stop
       - name: Remove
