@@ -148,3 +148,21 @@ Once you have your machines locked, you need to provide a list of their hostname
 export TEUTHOLOGY_TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepia.ceph.com"
 export TEUTHOLOGY_MACHINE_TYPE="smithi"
 ```
+### For GSoC 2025 Applicants
+
+Thank you for your interest in our project!
+
+To start off, we would like you to familiarise yourself with this project. This would involve understanding the basics of the [Teuthology] (https://github.com/ceph/teuthology) as well.
+
+Tasks -
+1. Set up ceph-devstack locally (you can see supported Operating Systems here - https://github.com/zmc/ceph-devstack/tree/main)
+2. Test your setup by making sure that you can run the following command without any issues:
+
+```bash
+ceph-devstack start
+```
+
+Once you have this running, share a screenshot with the mentors.
+We will update the next task here shortly.
+
+Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com.
