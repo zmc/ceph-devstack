@@ -152,9 +152,11 @@ export TEUTHOLOGY_MACHINE_TYPE="smithi"
 
 Thank you for your interest in our project!
 
-To start off, we would like you to familiarise yourself with this project. This would involve understanding the basics of the [Teuthology] (https://github.com/ceph/teuthology) as well.
+To start off, we would like you to familiarise yourself with this project. This would involve understanding the basics of the [Teuthology](https://github.com/ceph/teuthology) as well.
 
-Tasks -
+Evaluation Tasks -
+
+##### Task 1 
 1. Set up ceph-devstack locally (you can see supported Operating Systems here - https://github.com/zmc/ceph-devstack/tree/main)
 2. Test your setup by making sure that you can run the following command without any issues:
 
@@ -163,6 +165,25 @@ ceph-devstack start
 ```
 
 Once you have this running, share a screenshot with the mentors.
-We will update the next task here shortly.
 
-Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com.
+##### Task 2 
+
+Right now, we cannot determine if the test run was successful or not from the output of "teuthology" container logs. We would need to look at logs archive (particularly `teuthology.log` file) to see if the test passed successfully.  
+
+
+Implement a new ceph-devstack command to locate / display `teuthology.log` log file of a test run. By default, test logs are found at `~/.local/share/ceph-devstack`, but this path can be configurable. Log archives are stored as `<run-name>/<job-id>/teuthology.log`.
+
+By default, this command should locate logs of most recent test run, and dumps logs if there is only one job. If multiple jobs are found in a run, alert the user and ask them to choose a job.
+
+We can determine "latest run" by parsing datetime in the run name. 
+
+Also add a flag to this command to output filename (full path) instead of contents of logfile. 
+
+##### BONUS 
+
+Write unit tests for the above feature. 
+
+#### Connect 
+
+Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com. Use slack invite link at the bottom of [this page](https://ceph.io/en/community/connect/) to join ceph-storage.slack.com workspace. 
+
