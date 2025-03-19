@@ -7,6 +7,9 @@ ceph-devstack is a tool that can deploy and manage containerized versions of [te
 - Accessing Ceph's [Sepia lab](https://wiki.sepia.ceph.com/)
 - Needing dedicated storage devices to test Ceph OSDs
 
+Basically, the goal is that you can test your Ceph branch locally using containers
+as storage test nodes.
+
 It is currently under active development and has not yet had a formal release.
 
 ## Supported Operating Systems
