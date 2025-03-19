@@ -15,7 +15,7 @@ It is currently under active development and has not yet had a formal release.
 
 ☑︎ CentOS 8.Stream mostly works - but has not yet passed a Ceph test
 
-☐ A recent Fedora should work but has not been tested
+☑︎ Works for Fedora 41
 
 ☒ Ubuntu does not currently ship a new enough podman
 
