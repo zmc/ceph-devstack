@@ -105,6 +105,33 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="The container to wait for",
     )
     subparsers.add_parser("show-conf", help="show the configuration")
+    parser_log= subparsers.add_parser(
+        "teuthology-log", help="See the teuthology test log files"
+    )
+    parser_log.add_argument(
+        "--latest",
+        default=True,
+        action='store_true',
+        help="(Default) Get the latest teuthology test log",
+    )
+    parser_log.add_argument(
+        "--dir",
+        default=False,
+        help="(Optional) Specify a custom logs archive directory instead of ~/.local/share/ceph-devstack \n FORMAT /your/custom/dir/ceph-devstack/archive",
+    )
+    parser_log.add_argument(
+        "--path-only",
+        "-p",
+        default=False,
+        action='store_true',
+        help="Print the full path of teuthology.log instead of displaying its contents",
+    )
+    parser_log.add_argument(
+        "--job",
+        "-j",
+        default=False,
+        help="(Optional) Specify a job ID to display logs for a particular job",
+    )
     return parser.parse_args(args)
 
 

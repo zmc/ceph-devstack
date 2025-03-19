@@ -24,6 +24,7 @@ from ceph_devstack.resources.ceph.requirements import (
     LoopControlDeviceWriteable,
     SELinuxModule,
 )
+from ceph_devstack.resources.log import LogCapabilities
 
 
 class SSHKeyPair(Secret):
@@ -229,3 +230,13 @@ class CephDevStack:
                     return await container.wait()
         logger.error(f"Could not find container {container_name}")
         return 1
+
+    async def teuthology_log(self,args):
+        
+        if args.path_only:
+            LogCapabilities(path=args.dir, job_id=args.job).getPath()
+        else:
+            LogCapabilities(job_id=args.job).print_logs()
+        return 1
+    
+        
