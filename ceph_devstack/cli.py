@@ -36,6 +36,8 @@ def main():
             return
         elif args.command == "wait":
             return await obj.wait(container_name=args.container)
+        elif args.command == "teuthology-log":
+            return await obj.teuthology_log(args)
         else:
             await obj.apply(args.command)
             return 0
