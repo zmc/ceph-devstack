@@ -229,3 +229,8 @@ class CephDevStack:
                     return await container.wait()
         logger.error(f"Could not find container {container_name}")
         return 1
+
+    async def logs(
+        self, run_name: str = None, job_id: str = None, locate: bool = False
+    ):
+        pass
