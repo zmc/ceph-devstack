@@ -4,7 +4,8 @@ import contextlib
 import tempfile
 import random as rd
 from datetime import datetime, timedelta
-import unittest
+
+import pytest
 
 from ceph_devstack import config
 from ceph_devstack.resources.ceph.utils import (
@@ -16,7 +17,7 @@ from ceph_devstack.resources.ceph.exceptions import TooManyJobsFound
 from ceph_devstack.resources.ceph import CephDevStack
 
 
-class TestDevStack(unittest.IsolatedAsyncioTestCase):
+class TestDevStack:
     def test_get_logtimestamp(self):
         dirname = "root-2025-03-20_18:34:43-orch:cephadm:smoke-small-main-distro-default-testnode"
         assert get_logtimestamp(dirname) == datetime(2025, 3, 20, 18, 34, 43)
@@ -39,12 +40,12 @@ class TestDevStack(unittest.IsolatedAsyncioTestCase):
 
     def test_get_job_id_throws_filenotfound_on_missing_job(self):
         jobs = []
-        with self.assertRaises(FileNotFoundError):
+        with pytest.raises(FileNotFoundError):
             get_job_id(jobs)
 
     def test_get_job_id_throws_toomanyjobsfound_on_more_than_one_job(self):
         jobs = ["1", "2"]
-        with self.assertRaises(TooManyJobsFound):
+        with pytest.raises(TooManyJobsFound):
             get_job_id(jobs)
 
     async def test_logs_command_display_log_file_of_latest_run(self):
