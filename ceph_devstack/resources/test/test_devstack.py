@@ -147,5 +147,4 @@ class TestDevStack:
         log_file = f"{log_dir}/teuthology.log"
         with open(log_file, "w") as f:
             f.write(content)
-        print(log_file)
         return log_file

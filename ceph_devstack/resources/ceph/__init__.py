@@ -237,13 +237,17 @@ class CephDevStack:
         except FileNotFoundError:
             logger.error("No log file found")
         except TooManyJobsFound:
-            logger.error("Found too many jobs for provided. Please pick a job id")
+            logger.error(
+                "Found too many jobs for target run. Please pick a job id with -j flag."
+            )
         else:
             if locate:
                 print(log_file)
             else:
+                buffer_size = 8 * 1024
                 with open(log_file) as f:
-                    print(f.read())
+                    while chunk := f.read(buffer_size):
+                        print(chunk)
 
     def get_log_file(self, run_name: str = None, job_id: str = None):
         archive_dir = Teuthology().archive_dir.expanduser()
