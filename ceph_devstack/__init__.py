@@ -90,6 +90,8 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         default=False,
         help="Leave the cluster running - and don't auto-schedule anything",
     )
+
+    subparsers.add_parser("show_log", help="Show test logs")
     subparsers.add_parser("remove", help="Destroy the cluster")
     subparsers.add_parser("start", help="Start the cluster")
     subparsers.add_parser("stop", help="Stop the cluster")
