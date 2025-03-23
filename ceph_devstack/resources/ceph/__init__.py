@@ -258,24 +258,39 @@ class CephDevStack:
             if not all_job_ids:
                 logger.info("No latest jobIDs") # We could add a feature to go to the "next" latest directory
             else:
-                print("Available jobID to view log:", ", ".join(all_job_ids))
-                while True:
-                    selected_jobID = input("Select jobID to view corresponding log: ")
-                    if selected_jobID in all_job_ids:
-                        log_file_path = os.path.join(latest_directory, selected_jobID, "teuthology.log")
-                        if os.path.exists(log_file_path) and os.path.isfile(log_file_path) and not filepath:
-                            print("<------------teuthology.log contents------------> \n")
-                            with open(log_file_path, "r") as file:
-                                print(file.read())
-                            return 0
-                        elif filepath:
-                            logger.info(f"{log_file_path}")
-                            return 0
+                if(len(all_job_ids)>1):
+                    print("ALERT: Multiple jobIDs found: ", ", ".join(all_job_ids))
+                    while True:
+                        selected_jobID = input("Select jobID to view corresponding log: ")
+                        if selected_jobID in all_job_ids:
+                            log_file_path = os.path.join(latest_directory, selected_jobID, "teuthology.log")
+                            if os.path.exists(log_file_path) and os.path.isfile(log_file_path) and not filepath:
+                                print("<-----------teuthology.log contents----------->")
+                                with open(log_file_path, "r") as file:
+                                    print(file.read()) 
+                                return 0
+                            elif filepath:
+                                logger.info(f"{log_file_path}")
+                                return 0
+                            else:
+                                logger.error(f"Error: teuthology.log file not found in {os.path.join(latest_directory, selected_jobID)}")
+                                return 1
                         else:
-                            logger.error(f"Error: teuthology.log file not found in {os.path.join(latest_directory, selected_jobID)}")
-                            return 1
+                            logger.error(f"Error: {selected_jobID} is not a valid jobID")
+                else:
+                    selected_jobID = all_job_ids[0]
+                    log_file_path = os.path.join(latest_directory, selected_jobID, "teuthology.log")
+                    if os.path.exists(log_file_path) and os.path.isfile(log_file_path) and not filepath:
+                        print("<-----------teuthology.log contents----------->")
+                        with open(log_file_path, "r") as file:
+                            print(file.read()) 
+                        return 0
+                    elif filepath:
+                        logger.info(f"{log_file_path}")
+                        return 0
                     else:
-                        logger.error(f"Error: {selected_jobID} is not a valid jobID")
+                        logger.error(f"Error: teuthology.log file not found in {os.path.join(latest_directory, selected_jobID)}")
+                        return 1
             return 0
         except Exception as e:
             logger.error(f"Error: {e}")
