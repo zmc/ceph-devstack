@@ -91,13 +91,13 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="Leave the cluster running - and don't auto-schedule anything",
     )
 
-    parser_show_log = subparsers.add_parser("show_log", help="Show test logs")
+    parser_show_log = subparsers.add_parser("show-log", help="Show test logs")
     parser_show_log.add_argument(
         "-f",
         "--filepath",
         action="store_true",
         default=False,
-        help="Output just the full path of the logfile instead of its containers"
+        help="Output just the full path of the logfile instead of its content"
     )
     subparsers.add_parser("remove", help="Destroy the cluster")
     subparsers.add_parser("start", help="Start the cluster")
