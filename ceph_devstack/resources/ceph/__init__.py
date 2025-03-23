@@ -229,3 +229,49 @@ class CephDevStack:
                     return await container.wait()
         logger.error(f"Could not find container {container_name}")
         return 1
+
+    async def show_log(self):
+        home_dir = os.path.expanduser("~")
+        target_dir = os.path.join(home_dir, ".local", "share", "ceph-devstack", "archive")
+        run_directories_list = None
+        if os.path.exists(target_dir) and os.path.isdir(target_dir):
+            run_directories_list = os.listdir(target_dir)
+        else:
+            logger.error(f"Error: {target_dir} does not exist or is not a directory")
+            return 1
+        def extract_timestamp(dir_name):
+            try:
+                parts = dir_name.split("-")
+                year, month, day_time = parts[1], parts[2], parts[3]
+                day, time = day_time.split("_")
+                timestamp = f"{year}-{month}-{day} {time}"
+                return datetime.strptime(timestamp, "%Y-%m-%d %H:%M:%S")
+            except Exception as e:
+                logger.error(f"Error extracting timestamp from {dir_name}: {e}")
+                return None
+        run_directories_list.sort(key=lambda dir: extract_timestamp(dir), reverse=True)
+        latest_directory = run_directories_list[0] if run_directories_list else None
+        try:
+            latest_directory = os.path.join(target_dir, latest_directory)
+            all_job_ids = [jobID for jobID in os.listdir(latest_directory) if os.path.isdir(os.path.join(latest_directory, jobID)) and jobID.isdigit()]
+            if not all_job_ids:
+                logger.info("No latest jobIDs") # We could add a feature to go to the "next" latest directory
+            else:
+                print("Available jobID to view log:", ", ".join(all_job_ids))
+                while True:
+                    selected_jobID = input("Select jobID to view corresponding log: ")
+                    if selected_jobID in all_job_ids:
+                        log_file_path = os.path.join(latest_directory, selected_jobID, "teuthology.log")
+                        if os.path.exists(log_file_path) and os.path.isfile(log_file_path):
+                            print("<------------teuthology.log contents------------> \n")
+                            with open(log_file_path, "r") as file:
+                                print(file.read())
+                            return 0
+                        else:
+                            logger.error(f"Error: teuthology.log file not found in {os.path.join(latest_directory, selected_jobID)}")
+                            return 1
+                    else:
+                        logger.error(f"Error: {selected_jobID} is not a valid jobID")
+            return 0
+        except Exception as e:
+            logger.error(f"Error: {e}")
