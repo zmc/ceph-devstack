@@ -2,6 +2,7 @@ import asyncio
 import contextlib
 import os
 import tempfile
+from datetime import datetime
 
 from collections import OrderedDict
 from subprocess import CalledProcessError
@@ -230,7 +231,7 @@ class CephDevStack:
         logger.error(f"Could not find container {container_name}")
         return 1
 
-    async def show_log(self):
+    async def show_log(self, filepath: bool = False):
         home_dir = os.path.expanduser("~")
         target_dir = os.path.join(home_dir, ".local", "share", "ceph-devstack", "archive")
         run_directories_list = None
@@ -262,10 +263,13 @@ class CephDevStack:
                     selected_jobID = input("Select jobID to view corresponding log: ")
                     if selected_jobID in all_job_ids:
                         log_file_path = os.path.join(latest_directory, selected_jobID, "teuthology.log")
-                        if os.path.exists(log_file_path) and os.path.isfile(log_file_path):
+                        if os.path.exists(log_file_path) and os.path.isfile(log_file_path) and not filepath:
                             print("<------------teuthology.log contents------------> \n")
                             with open(log_file_path, "r") as file:
                                 print(file.read())
+                            return 0
+                        elif filepath:
+                            logger.info(f"{log_file_path}")
                             return 0
                         else:
                             logger.error(f"Error: teuthology.log file not found in {os.path.join(latest_directory, selected_jobID)}")
@@ -275,3 +279,4 @@ class CephDevStack:
             return 0
         except Exception as e:
             logger.error(f"Error: {e}")
+    
