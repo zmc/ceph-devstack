@@ -54,7 +54,13 @@ def main():
     except KeyboardInterrupt:
         logger.debug("Exiting!")
 
-def teuthology_logs(data_path):
+def teuthology_logs(data_path:str) -> int:
+    """
+    This function is used to get the teuthology logs of the latest job run.
+    
+    Args:
+    data_path (str): Path to the data directory.
+    """
     list_runs = [f.path for f in os.scandir(data_path + "/archive") if f.is_dir()]
     if len(list_runs) == 0:
         logger.error("No runs found!")
