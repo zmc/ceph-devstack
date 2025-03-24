@@ -107,7 +107,7 @@ To locate/ display the ``teuthology.log`` log archive of latest test run, you ca
 ceph-devstack logs 
 ```
 ```bash
-# To locate the logs of latest run
+# To locate the logs file of latest run
 ceph-devstack logs --log-file
 ```
 
