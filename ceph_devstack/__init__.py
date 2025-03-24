@@ -105,6 +105,15 @@ def parse_args(args: List[str]) -> argparse.Namespace:
         help="The container to wait for",
     )
     subparsers.add_parser("show-conf", help="show the configuration")
+    parser_logs=subparsers.add_parser(
+        "logs", help="Display teuthology.log logs of the latest run"
+    )
+    parser_logs.add_argument(
+        "--log-file",
+        action="store_true",
+        default=False,
+        help="Display teuthology.log file path of the latest run with flag set"
+    )
     return parser.parse_args(args)
 
 
