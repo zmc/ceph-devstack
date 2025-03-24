@@ -100,6 +100,16 @@ To watch teuthology's output, you can:
 ```bash
 podman logs -f teuthology
 ```
+To locate/ display the ``teuthology.log`` log archive of latest test run, you can 
+
+```bash
+# To display the logs of latest run
+ceph-devstack logs 
+```
+```bash
+# To locate the logs of latest run
+ceph-devstack logs --log-file
+```
 
 If you want testnode containers to be replaced as they are stopped and destroyed, you can:
 
