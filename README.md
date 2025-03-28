@@ -186,6 +186,14 @@ Also add a flag to this command to output filename (full path) instead of conten
 
 Write unit tests for the above feature. 
 
+#### Problem Statement 
+
+Implement a feature that allows ceph-devstack to to configured to use an arbitrary number of storage devices per testnode container. This will enable us to deploy multiple [Ceph OSDs](https://docs.ceph.com/en/latest/glossary/#term-Ceph-OSD) per testnode - bringing us closer to how we use teuthology in production. Right now, ceph-devstack supports 1 OSD per testnode. 
+
+If you have extra time, you might consider also allowing the _size_ of the storage devices to be configurable. The same size can be used for all.
+
+In the future, we may also want to implement a feature that allows ceph-devstack to discover and directly consume unused storage devices on the host machine, as opposed to using loop devices. This would enable more performance-sensitive testing.
+
 #### Connect 
 
 Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com. Use slack invite link at the bottom of [this page](https://ceph.io/en/community/connect/) to join ceph-storage.slack.com workspace. 
