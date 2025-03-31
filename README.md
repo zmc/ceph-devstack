@@ -7,6 +7,9 @@ ceph-devstack is a tool that can deploy and manage containerized versions of [te
 - Accessing Ceph's [Sepia lab](https://wiki.sepia.ceph.com/)
 - Needing dedicated storage devices to test Ceph OSDs
 
+Basically, the goal is that you can test your Ceph branch locally using containers
+as storage test nodes.
+
 It is currently under active development and has not yet had a formal release.
 
 ## Supported Operating Systems
@@ -54,7 +57,7 @@ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 ## Configuration
 `ceph-devstack` 's default configuration is [here](./ceph_devstack/config.yml). It can be extended by placing a file at `~/.config/ceph-devstack/config.yml` or by using the `--config-file` flag.
 
-`ceph-devstack show-conf` will output the current configuration.
+`ceph-devstack config dump` will output the current configuration.
 
 As an example, the following configuration will use a local image for paddles with the tag `TEST`; it will also create ten testnode containers; and will build its teuthology container from the git repo at `~/src/teuthology`:
 ```
@@ -182,6 +185,14 @@ Also add a flag to this command to output filename (full path) instead of conten
 ##### BONUS 
 
 Write unit tests for the above feature. 
+
+#### Problem Statement 
+
+Implement a feature that allows ceph-devstack to to configured to use an arbitrary number of storage devices per testnode container. This will enable us to deploy multiple [Ceph OSDs](https://docs.ceph.com/en/latest/glossary/#term-Ceph-OSD) per testnode - bringing us closer to how we use teuthology in production. Right now, ceph-devstack supports 1 OSD per testnode. 
+
+If you have extra time, you might consider also allowing the _size_ of the storage devices to be configurable. The same size can be used for all.
+
+In the future, we may also want to implement a feature that allows ceph-devstack to discover and directly consume unused storage devices on the host machine, as opposed to using loop devices. This would enable more performance-sensitive testing.
 
 #### Connect 
 

@@ -4,7 +4,6 @@ import os
 import tempfile
 from datetime import datetime
 
-from collections import OrderedDict
 from subprocess import CalledProcessError
 
 from ceph_devstack import config, logger
@@ -88,26 +87,38 @@ class CephDevStack:
     networks = [CephDevStackNetwork]
     secrets = [SSHKeyPair]
 
-    async def get_containers(self):
-        return OrderedDict(
-            [
-                (Postgres, 1),
-                (Paddles, 1),
-                (Beanstalk, 1),
-                (Pulpito, 1),
-                (Teuthology, 1),
-                (TestNode, await self.get_testnode_count()),
-                (Archive, 1),
-            ]
-        )
-
-    async def get_testnode_count(self) -> int:
-        teuth = Teuthology()
-        try:
-            data = await teuth.inspect()
-            return int(data[0]["config"]["Labels"]["testnode_count"])
-        except (KeyError, IndexError, CalledProcessError):
-            return config["containers"]["testnode"]["count"]
+    def __init__(self):
+        services = [
+            Postgres,
+            Paddles,
+            Beanstalk,
+            Pulpito,
+            Teuthology,
+            TestNode,
+            Archive,
+        ]
+        self.service_specs = {}
+        for service in services:
+            name = service.__name__.lower()
+            count = config["containers"][name].get("count", 1)
+            if count == 0:
+                continue
+            self.service_specs[name] = {
+                "obj": service,
+                "count": count,
+            }
+            if count == 1:
+                self.service_specs[name]["objects"] = [service()]
+            elif count > 1:
+                self.service_specs[name]["objects"] = [
+                    service(name=f"{name}_{i}") for i in range(count)
+                ]
+        if postgres_spec := self.service_specs.get("postgres"):
+            postgres_obj = postgres_spec["objects"][0]
+            paddles_obj = self.service_specs["paddles"]["objects"][0]
+            paddles_obj.env_vars["PADDLES_SQLALCHEMY_URL"] = (
+                postgres_obj.paddles_sqla_url
+            )
 
     async def check_requirements(self):
         result = True
@@ -131,45 +142,32 @@ class CephDevStack:
     async def apply(self, action):
         return await getattr(self, action)()
 
-    async def get_container_names(self, kind):
-        count = (await self.get_containers())[kind]
-        name = kind.__name__.lower()
-        if count > 1:
-            return [f"{name}_{i}" for i in range(count)]
-        return [""]
-
     async def pull(self):
         logger.info("Pulling images...")
-        images = config["args"]["image"]
-        for kind in (await self.get_containers()).keys():
-            if images and str(kind.__name__).lower() not in images:
-                continue
-            await kind().pull()
+        for spec in self.service_specs.values():
+            await spec["objects"][0].pull()
 
     async def build(self):
         logger.info("Building images...")
-        images = config["args"]["image"]
-        for kind in (await self.get_containers()).keys():
-            if images and str(kind.__name__).lower() not in images:
-                continue
-            await kind().build()
+        for spec in self.service_specs.values():
+            await spec["objects"][0].build()
 
     async def create(self):
         logger.info("Creating containers...")
         await CephDevStackNetwork().create()
         await SSHKeyPair().create()
         containers = []
-        for kind in (await self.get_containers()).keys():
-            for name in await self.get_container_names(kind):
-                containers.append(kind(name=name).create())
+        for spec in self.service_specs.values():
+            for object in spec["objects"]:
+                containers.append(object.create())
         await asyncio.gather(*containers)
 
     async def start(self):
         await self.create()
         logger.info("Starting containers...")
-        for kind in (await self.get_containers()).keys():
-            for name in await self.get_container_names(kind):
-                await kind(name=name).start()
+        for spec in self.service_specs.values():
+            for object in spec["objects"]:
+                await object.start()
         logger.info(
             "All containers are running. To monitor teuthology, try running: podman "
             "logs -f teuthology"
@@ -180,17 +178,17 @@ class CephDevStack:
     async def stop(self):
         logger.info("Stopping containers...")
         containers = []
-        for kind in (await self.get_containers()).keys():
-            for name in await self.get_container_names(kind):
-                containers.append(kind(name=name).stop())
+        for spec in self.service_specs.values():
+            for object in spec["objects"]:
+                containers.append(object.stop())
         await asyncio.gather(*containers)
 
     async def remove(self):
         logger.info("Removing containers...")
         containers = []
-        for kind in (await self.get_containers()).keys():
-            for name in await self.get_container_names(kind):
-                containers.append(kind(name=name).remove())
+        for spec in self.service_specs.values():
+            for object in spec["objects"]:
+                containers.append(object.remove())
         await asyncio.gather(*containers)
         await CephDevStackNetwork().remove()
         await SSHKeyPair().remove()
@@ -198,11 +196,11 @@ class CephDevStack:
     async def watch(self):
         logger.info("Watching containers; will replace any that are stopped")
         containers = []
-        for kind, count in (await self.get_containers()).items():
-            if not count > 0:
+        for spec in self.service_specs.values():
+            if not spec["count"] > 0:
                 continue
-            for name in await self.get_container_names(kind):
-                containers.append(kind(name=name))
+            for object in spec["objects"]:
+                containers.append(object)
         logger.info(f"Watching {containers}")
         while True:
             try:
@@ -223,11 +221,10 @@ class CephDevStack:
                 break
 
     async def wait(self, container_name: str):
-        for kind in (await self.get_containers()).keys():
-            for name in await self.get_container_names(kind):
-                container = kind(name=name)
-                if container.name == container_name:
-                    return await container.wait()
+        for spec in self.service_specs.values():
+            for object in spec["objects"]:
+                if object.name == container_name:
+                    return await object.wait()
         logger.error(f"Could not find container {container_name}")
         return 1
 
