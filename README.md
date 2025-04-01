@@ -55,7 +55,7 @@ python3 -m pip install git+https://github.com/zmc/ceph-devstack.git
 ```
 
 ## Configuration
-`ceph-devstack` 's default configuration is [here](./ceph_devstack/config.yml). It can be extended by placing a file at `~/.config/ceph-devstack/config.yml` or by using the `--config-file` flag.
+`ceph-devstack` 's default configuration is [here](./ceph_devstack/config.toml). It can be extended by placing a file at `~/.config/ceph-devstack/config.toml` or by using the `--config-file` flag.
 
 `ceph-devstack config dump` will output the current configuration.
 
@@ -159,7 +159,7 @@ To start off, we would like you to familiarise yourself with this project. This 
 
 Evaluation Tasks -
 
-##### Task 1 
+##### Task 1
 1. Set up ceph-devstack locally (you can see supported Operating Systems here - https://github.com/zmc/ceph-devstack/tree/main)
 2. Test your setup by making sure that you can run the following command without any issues:
 
@@ -169,32 +169,31 @@ ceph-devstack start
 
 Once you have this running, share a screenshot with the mentors.
 
-##### Task 2 
+##### Task 2
 
-Right now, we cannot determine if the test run was successful or not from the output of "teuthology" container logs. We would need to look at logs archive (particularly `teuthology.log` file) to see if the test passed successfully.  
+Right now, we cannot determine if the test run was successful or not from the output of "teuthology" container logs. We would need to look at logs archive (particularly `teuthology.log` file) to see if the test passed successfully.
 
 
 Implement a new ceph-devstack command to locate / display `teuthology.log` log file of a test run. By default, test logs are found at `~/.local/share/ceph-devstack`, but this path can be configurable. Log archives are stored as `<run-name>/<job-id>/teuthology.log`.
 
 By default, this command should locate logs of most recent test run, and dumps logs if there is only one job. If multiple jobs are found in a run, alert the user and ask them to choose a job.
 
-We can determine "latest run" by parsing datetime in the run name. 
+We can determine "latest run" by parsing datetime in the run name.
 
-Also add a flag to this command to output filename (full path) instead of contents of logfile. 
+Also add a flag to this command to output filename (full path) instead of contents of logfile.
 
-##### BONUS 
+##### BONUS
 
-Write unit tests for the above feature. 
+Write unit tests for the above feature.
 
-#### Problem Statement 
+#### Problem Statement
 
-Implement a feature that allows ceph-devstack to to configured to use an arbitrary number of storage devices per testnode container. This will enable us to deploy multiple [Ceph OSDs](https://docs.ceph.com/en/latest/glossary/#term-Ceph-OSD) per testnode - bringing us closer to how we use teuthology in production. Right now, ceph-devstack supports 1 OSD per testnode. 
+Implement a feature that allows ceph-devstack to to configured to use an arbitrary number of storage devices per testnode container. This will enable us to deploy multiple [Ceph OSDs](https://docs.ceph.com/en/latest/glossary/#term-Ceph-OSD) per testnode - bringing us closer to how we use teuthology in production. Right now, ceph-devstack supports 1 OSD per testnode.
 
 If you have extra time, you might consider also allowing the _size_ of the storage devices to be configurable. The same size can be used for all.
 
 In the future, we may also want to implement a feature that allows ceph-devstack to discover and directly consume unused storage devices on the host machine, as opposed to using loop devices. This would enable more performance-sensitive testing.
 
-#### Connect 
+#### Connect
 
-Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com. Use slack invite link at the bottom of [this page](https://ceph.io/en/community/connect/) to join ceph-storage.slack.com workspace. 
-
+Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com. Use slack invite link at the bottom of [this page](https://ceph.io/en/community/connect/) to join ceph-storage.slack.com workspace.
