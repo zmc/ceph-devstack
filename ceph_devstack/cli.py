@@ -40,6 +40,8 @@ def main():
             return
         elif args.command == "wait":
             return await obj.wait(container_name=args.container)
+        elif args.command == "show-log":
+            return await obj.show_log(filepath=args.filepath)
         else:
             await obj.apply(args.command)
             return 0
