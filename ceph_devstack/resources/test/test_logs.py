@@ -28,7 +28,7 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:str,c
     """
     logger = logging.getLogger(__name__)
 
-    if flag_set=="true":
+    if flag_set:
         monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.yaml', 'logs','--log-file'])
     else:
         monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.yaml', 'logs'])
