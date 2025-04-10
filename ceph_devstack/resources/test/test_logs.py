@@ -34,16 +34,16 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
     logger = logging.getLogger(__name__)
 
     if flag_set:
-        monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.yaml', 'logs','--log-file'])
+        monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.toml', 'logs','--log-file'])
     else:
-        monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.yaml', 'logs'])
+        monkeypatch.setattr(sys, 'argv', [ sys.argv[0],'-c', 'ceph_devstack/resources/test/test_config.toml', 'logs'])
     monkeypatch.setattr('builtins.input', lambda name: str(selection))
     data_path = '/tmp/ceph-devstack'
     try:
         os.makedirs(data_path+'/archive', exist_ok=True)
     except Exception as e:
         logger.error(f"Error creating directory: {e}")
-        return 1
+        exit(1)
     runs_dir={}
     if num_runs>0:
         for i in range(num_runs):
@@ -55,7 +55,7 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
                 os.makedirs(data_path+'/archive'+'/root-'+random_date+'-teuthology', exist_ok=True)
             except Exception as e:
                 logger.error(f"Error creating directory: {e}")
-                return 1
+                exit(1)
             random_logs = []
             if num_jobs>0:
                 for j in range(num_jobs):
@@ -63,7 +63,7 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
                         os.makedirs(data_path+'/archive'+'/root-'+random_date+'-teuthology/'+str(j), exist_ok=True)
                     except Exception as e:
                         logger.error(f"Error creating directory: {e}")
-                        return 1
+                        exit(1)
                     if teuthology_file_present:
                         try:
                             with open(data_path+'/archive'+'/root-'+random_date+'-teuthology/'+str(j)+'/teuthology.log', 'w') as f:
@@ -71,21 +71,21 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
                                 f.write(random_logs[-1])
                         except Exception as e:
                             logger.error(f"Error creating file: {e}")
-                            return 1
+                            exit(1)
             runs_dir[data_path+'/archive'+'/root-'+random_date+'-teuthology']=random_logs
     try:
         with pytest.raises(SystemExit) as main_exit:
             main()
     except Exception as e:
         logger.error(f"Error running main: {e}")
-        return 1
+        exit(1)
     
     output, err = capsys.readouterr()
     try:
         shutil.rmtree(data_path+'/archive')
     except Exception as e:
         logger.error(f"Error removing directory: {e}")
-        return 1
+        exit(1)
     
     runs_dir_list=list(runs_dir.keys())
     if num_runs>0:
