@@ -1,8 +1,10 @@
 import asyncio
 import logging
 import sys
-
 from pathlib import Path
+from pydoc import ttypager
+import os
+from datetime import datetime
 
 from ceph_devstack import config, logger, parse_args, VERBOSE
 from ceph_devstack.requirements import check_requirements
@@ -40,6 +42,9 @@ def main():
             return
         elif args.command == "wait":
             return await obj.wait(container_name=args.container)
+        elif args.command == "logs":
+            ret=teuthology_logs(str(data_path))
+            return ret
         else:
             await obj.apply(args.command)
             return 0
@@ -48,3 +53,70 @@ def main():
         sys.exit(asyncio.run(run()))
     except KeyboardInterrupt:
         logger.debug("Exiting!")
+
+def teuthology_logs(data_path:str) -> int:
+    """
+    This function is used to get the teuthology logs of the latest job run.
+    
+    Args:
+    data_path (str): Path to the data directory.
+    """
+    list_runs = [f.path for f in os.scandir(data_path + "/archive") if f.is_dir()]
+    if len(list_runs) == 0:
+        logger.error("No runs found!")
+        return 1
+    # Atleast one run directory exist, due to above condition
+    try:  
+        list_runs.sort(key=lambda x: datetime.strptime(x.split('/')[-1].split('root-')[1].split('-teuthology')[0], '%Y-%m-%d_%H:%M:%S'))
+    except ValueError as e:
+        # if the run directory is not in the format root-YYYY-MM-DD_HH:MM:SS-teuthology
+        logger.error(f"Error parsing date: {e}")
+        return 1
+    latest_run = list_runs[-1]
+    latest_run_subdir = [f.path for f in os.scandir(latest_run) if f.is_dir()]
+    if len(latest_run_subdir) == 0:
+        logger.error("No jobs found!")
+        return 1
+    # check if only one job present, then display logs. Also check if the teuthology.log file exists in the latest run directory
+    if len(latest_run_subdir) == 1 :
+        if os.path.exists(latest_run_subdir[0] + "/teuthology.log") and os.path.isfile(latest_run_subdir[0] + "/teuthology.log"):
+            try:
+                if config["args"].get("log_file", False):
+                    print(f"Log file path: {latest_run_subdir[0]}/teuthology.log")
+                    return 0
+                with open(latest_run_subdir[0] + "/teuthology.log", 'r') as f:
+                    ttypager(f.read())
+                return 0
+            except :
+                logger.error("Error while reading teuthology.log!")
+                return 1
+        else:
+            logger.error("teuthology.log file not found!")
+            return 1
+
+    # Multiple jobs present, then display the job ids
+    print("Jobs present in latest run:")
+    job_ids=[]
+    for job in latest_run_subdir:
+        job_ids.append(job.split('/')[-1])
+        print(f"Job id: {job.split('/')[-1]}")
+    job_id=input("Enter any of the above job id to get logs: ")
+    # check if the job id is valid
+    if job_id not in job_ids:
+        logger.error("Invalid job id!")
+        return 1
+    # check if the teuthology.log file exists in the job directory
+    if os.path.exists(latest_run +'/'+ job_id +'/teuthology.log') and os.path.isfile(latest_run +'/'+ job_id +'/teuthology.log'):
+        try:
+            if config["args"].get("log_file", False):
+                print(f"Log file path: {latest_run +'/'+ job_id +'/teuthology.log'}")
+                return 0    
+            with open(latest_run +"/"+ job_id +"/teuthology.log", 'r') as f:
+                ttypager(f.read())
+        except :
+            logger.error("Error while reading teuthology.log!!")
+            return 1
+    else:
+        logger.error("teuthology.log file not found!")
+        return 1
+    return 0

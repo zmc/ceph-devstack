@@ -1,0 +1,23 @@
+data_dir = "/tmp/ceph-devstack"
+
+[containers.archive]
+image = "python:alpine"
+
+[containers.beanstalk]
+image = "quay.io/ceph-infra/teuthology-beanstalkd:latest"
+
+[containers.paddles]
+image = "quay.io/ceph-infra/paddles:latest"
+
+[containers.postgres]
+image = "quay.io/ceph-infra/teuthology-postgresql:latest"
+
+[containers.pulpito]
+image = "quay.io/ceph-infra/pulpito:latest"
+
+[containers.testnode]
+count = 3
+image = "quay.io/ceph-infra/teuthology-testnode:latest"
+
+[containers.teuthology]
+image = "quay.io/ceph-infra/teuthology-dev:latest"
