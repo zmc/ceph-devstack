@@ -11,11 +11,11 @@ import logging
 '''
 Using pytest paramtrization to test logs command with different 
 combinations of runs, jobs, selection and if view file path flag is set.
-Following parameter combination results in 5*2=10 test cases.
+Following parameter combination results in 7*2=14 test cases.
 '''
-@pytest.mark.parametrize("num_runs,num_jobs,selection",[(0,0,0),(2,0,0),(4,1,0),(4,3,2),(3, 2, 3)])
+@pytest.mark.parametrize("num_runs,num_jobs,selection,teuthology_file_present",[(0,0,0,True),(2,0,0,True),(4,1,0,True),(4,1,0,False),(4,3,2,True),((4,3,2,False)),(3, 2, 3,True)])
 @pytest.mark.parametrize("flag_set",[ True, False])
-def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,capsys:pytest.CaptureFixture,monkeypatch:pytest.MonkeyPatch,caplog:pytest.LogCaptureFixture) -> int:     
+def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,teuthology_file_present:bool,capsys:pytest.CaptureFixture,monkeypatch:pytest.MonkeyPatch,caplog:pytest.LogCaptureFixture) -> int:     
     """ This function tests the 'logs' command of ceph-devstack.
     
     Creates a directory structure with random logs and runs the 'logs' command.
@@ -64,13 +64,14 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
                     except Exception as e:
                         logger.error(f"Error creating directory: {e}")
                         return 1
-                    try:
-                        with open(data_path+'/archive'+'/root-'+random_date+'-teuthology/'+str(j)+'/teuthology.log', 'w') as f:
-                            random_logs.append(''.join(random.choices(string.ascii_letters, k=200)))
-                            f.write(random_logs[-1])
-                    except Exception as e:
-                        logger.error(f"Error creating file: {e}")
-                        return 1
+                    if teuthology_file_present:
+                        try:
+                            with open(data_path+'/archive'+'/root-'+random_date+'-teuthology/'+str(j)+'/teuthology.log', 'w') as f:
+                                random_logs.append(''.join(random.choices(string.ascii_letters, k=200)))
+                                f.write(random_logs[-1])
+                        except Exception as e:
+                            logger.error(f"Error creating file: {e}")
+                            return 1
             runs_dir[data_path+'/archive'+'/root-'+random_date+'-teuthology']=random_logs
     try:
         with pytest.raises(SystemExit) as main_exit:
@@ -98,6 +99,9 @@ def test_teuthology_logs(num_runs:int,num_jobs:int,selection:int, flag_set:bool,
     elif selection not in range(num_jobs):
         assert main_exit.value.code == 1
         assert "Invalid job id!" in caplog.text
+    elif not teuthology_file_present:
+        assert main_exit.value.code == 1
+        assert "teuthology.log file not found!" in caplog.text
     elif flag_set:
         assert main_exit.value.code == 0
         assert  f"Log file path: {runs_dir_list[-1]}/{selection}/teuthology.log" in output

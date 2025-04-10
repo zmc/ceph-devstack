@@ -78,16 +78,20 @@ def teuthology_logs(data_path:str) -> int:
         logger.error("No jobs found!")
         return 1
     # check if only one job present, then display logs. Also check if the teuthology.log file exists in the latest run directory
-    if len(latest_run_subdir) == 1 and os.path.exists(latest_run_subdir[0] + "/teuthology.log") and os.path.isfile(latest_run_subdir[0] + "/teuthology.log"):
-        try:
-            if config["args"].get("log_file", False):
-                print(f"Log file path: {latest_run_subdir[0]}/teuthology.log")
+    if len(latest_run_subdir) == 1 :
+        if os.path.exists(latest_run_subdir[0] + "/teuthology.log") and os.path.isfile(latest_run_subdir[0] + "/teuthology.log"):
+            try:
+                if config["args"].get("log_file", False):
+                    print(f"Log file path: {latest_run_subdir[0]}/teuthology.log")
+                    return 0
+                with open(latest_run_subdir[0] + "/teuthology.log", 'r') as f:
+                    ttypager(f.read())
                 return 0
-            with open(latest_run_subdir[0] + "/teuthology.log", 'r') as f:
-                ttypager(f.read())
-            return 0
-        except :
-            logger.error("No logs found!")
+            except :
+                logger.error("Error while reading teuthology.log!")
+                return 1
+        else:
+            logger.error("teuthology.log file not found!")
             return 1
 
     # Multiple jobs present, then display the job ids
@@ -110,6 +114,9 @@ def teuthology_logs(data_path:str) -> int:
             with open(latest_run +"/"+ job_id +"/teuthology.log", 'r') as f:
                 ttypager(f.read())
         except :
-            logger.error("Error reading the logs!")
+            logger.error("Error while reading teuthology.log!!")
             return 1
+    else:
+        logger.error("teuthology.log file not found!")
+        return 1
     return 0
