@@ -107,7 +107,11 @@ def parse_args(args: List[str]) -> argparse.Namespace:
     parser_log = subparsers.add_parser("logs", help="Dump teuthology logs")
     parser_log.add_argument("-r", "--run-name", type=str, default=None)
     parser_log.add_argument("-j", "--job-id", type=str, default=None)
-    parser_log.add_argument("--locate", action=argparse.BooleanOptionalAction)
+    parser_log.add_argument(
+        "--locate",
+        action=argparse.BooleanOptionalAction,
+        help="Display log file path instead of contents",
+    )
     return parser.parse_args(args)
 
 

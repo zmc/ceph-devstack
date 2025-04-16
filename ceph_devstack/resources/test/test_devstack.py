@@ -4,6 +4,8 @@ import contextlib
 import tempfile
 import random as rd
 from datetime import datetime, timedelta
+import secrets
+import string
 
 import pytest
 
@@ -65,6 +67,22 @@ class TestDevStack:
                 devstack = CephDevStack()
                 await devstack.logs()
             assert content in f.getvalue()
+
+    async def test_logs_display_roughly_contents_of_log_file(self):
+        with tempfile.TemporaryDirectory() as data_dir:
+            config["data_dir"] = data_dir
+            f = io.StringIO()
+            content = "".join(
+                secrets.choice(string.ascii_letters + string.digits)
+                for _ in range(6 * 8 * 1024)
+            )
+            now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            self.create_logfile(data_dir, timestamp=now, content=content)
+
+            with contextlib.redirect_stdout(f):
+                devstack = CephDevStack()
+                await devstack.logs()
+            assert content == f.getvalue()
 
     async def test_logs_command_display_log_file_of_given_job_id(self):
         with tempfile.TemporaryDirectory() as data_dir:

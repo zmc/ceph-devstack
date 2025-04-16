@@ -247,7 +247,7 @@ class CephDevStack:
                 buffer_size = 8 * 1024
                 with open(log_file) as f:
                     while chunk := f.read(buffer_size):
-                        print(chunk)
+                        print(chunk, end="")
 
     def get_log_file(self, run_name: str = None, job_id: str = None):
         archive_dir = Teuthology().archive_dir.expanduser()
