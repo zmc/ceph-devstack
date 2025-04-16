@@ -254,12 +254,12 @@ class CephDevStack:
 
         if not run_name:
             run_name = get_most_recent_run(os.listdir(archive_dir))
-        run_dir = os.path.join(archive_dir, run_name)
+        run_dir = archive_dir.joinpath(run_name)
 
         if not job_id:
             job_id = get_job_id(os.listdir(run_dir))
 
-        log_file = os.path.join(run_dir, job_id, "teuthology.log")
-        if not os.path.exists(log_file):
+        log_file = run_dir.joinpath(job_id, "teuthology.log")
+        if not log_file.exists():
             raise FileNotFoundError
         return log_file
