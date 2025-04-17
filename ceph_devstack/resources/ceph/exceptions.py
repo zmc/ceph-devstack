@@ -1,2 +1,3 @@
 class TooManyJobsFound(Exception):
-    pass
+    def __init__(self, jobs: list[str]):
+        self.jobs = jobs

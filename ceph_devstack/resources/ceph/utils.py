@@ -40,5 +40,5 @@ def get_job_id(jobs: list[str]):
     if len(dirs) == 0:
         raise FileNotFoundError
     elif len(dirs) > 1:
-        raise TooManyJobsFound
+        raise TooManyJobsFound(dirs)
     return dirs[0]

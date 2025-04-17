@@ -236,10 +236,11 @@ class CephDevStack:
             log_file = self.get_log_file(run_name, job_id)
         except FileNotFoundError:
             logger.error("No log file found")
-        except TooManyJobsFound:
-            logger.error(
-                "Found too many jobs for target run. Please pick a job id with -j flag."
+        except TooManyJobsFound as e:
+            msg = "Found too many jobs: {jobs} for target run. Please pick a job id with -j flag.".format(
+                jobs=", ".join(e.jobs)
             )
+            logger.error(msg)
         else:
             if locate:
                 print(log_file)
