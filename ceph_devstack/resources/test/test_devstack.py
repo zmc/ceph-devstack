@@ -49,7 +49,7 @@ class TestDevStack:
         jobs = ["1", "2"]
         with pytest.raises(TooManyJobsFound) as exc:
             get_job_id(jobs)
-            assert exc.value.dirs == jobs
+        assert exc.value.jobs == jobs
 
     async def test_logs_command_display_log_file_of_latest_run(self):
         with tempfile.TemporaryDirectory() as data_dir:
