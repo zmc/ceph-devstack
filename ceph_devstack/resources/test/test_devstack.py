@@ -60,8 +60,8 @@ class TestDevStack:
             "%Y-%m-%d_%H:%M:%S"
         )
 
-        self.create_logfile(data_dir, timestamp=now, content=content)
-        self.create_logfile(data_dir, timestamp=forty_days_ago)
+        self.create_log_file(data_dir, timestamp=now, content=content)
+        self.create_log_file(data_dir, timestamp=forty_days_ago)
 
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
@@ -77,7 +77,7 @@ class TestDevStack:
             for _ in range(6 * 8 * 1024)
         )
         now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        self.create_logfile(data_dir, timestamp=now, content=content)
+        self.create_log_file(data_dir, timestamp=now, content=content)
 
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
@@ -91,14 +91,14 @@ class TestDevStack:
         content = "custom log message"
         now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-        self.create_logfile(
+        self.create_log_file(
             data_dir,
             timestamp=now,
             test_type="ceph",
             job_id="1",
             content="another log",
         )
-        self.create_logfile(
+        self.create_log_file(
             data_dir, timestamp=now, test_type="ceph", job_id="2", content=content
         )
 
@@ -117,11 +117,11 @@ class TestDevStack:
             "%Y-%m-%d_%H:%M:%S"
         )
 
-        self.create_logfile(
+        self.create_log_file(
             data_dir,
             timestamp=now,
         )
-        run_name = self.create_logfile(
+        run_name = self.create_log_file(
             data_dir,
             timestamp=three_days_ago,
             content=content,
@@ -137,13 +137,13 @@ class TestDevStack:
 
         config["data_dir"] = data_dir
         f = io.StringIO()
-        logfile = self.create_logfile(data_dir)
+        log_file = self.create_log_file(data_dir)
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
             await devstack.logs(locate=True)
-        assert logfile in f.getvalue()
+        assert log_file in f.getvalue()
 
-    def create_logfile(self, data_dir: str, **kwargs):
+    def create_log_file(self, data_dir: str, **kwargs):
         parts = {
             "timestamp": (datetime.now() - timedelta(days=rd.randint(1, 100))).strftime(
                 "%Y-%m-%d_%H:%M:%S"
