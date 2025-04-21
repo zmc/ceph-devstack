@@ -50,7 +50,9 @@ class TestDevStack:
             get_job_id(jobs)
         assert exc.value.jobs == jobs
 
-    async def test_logs_command_display_log_file_of_latest_run(self, tmp_path):
+    async def test_logs_command_display_log_file_of_latest_run(
+        self, tmp_path, create_log_file
+    ):
         data_dir = str(tmp_path)
         config["data_dir"] = data_dir
         f = io.StringIO()
@@ -60,15 +62,17 @@ class TestDevStack:
             "%Y-%m-%d_%H:%M:%S"
         )
 
-        self.create_log_file(data_dir, timestamp=now, content=content)
-        self.create_log_file(data_dir, timestamp=forty_days_ago)
+        create_log_file(data_dir, timestamp=now, content=content)
+        create_log_file(data_dir, timestamp=forty_days_ago)
 
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
             await devstack.logs()
         assert content in f.getvalue()
 
-    async def test_logs_display_roughly_contents_of_log_file(self, tmp_path):
+    async def test_logs_display_roughly_contents_of_log_file(
+        self, tmp_path, create_log_file
+    ):
         data_dir = str(tmp_path)
         config["data_dir"] = data_dir
         f = io.StringIO()
@@ -77,28 +81,30 @@ class TestDevStack:
             for _ in range(6 * 8 * 1024)
         )
         now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        self.create_log_file(data_dir, timestamp=now, content=content)
+        create_log_file(data_dir, timestamp=now, content=content)
 
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
             await devstack.logs()
         assert content == f.getvalue()
 
-    async def test_logs_command_display_log_file_of_given_job_id(self, tmp_path):
+    async def test_logs_command_display_log_file_of_given_job_id(
+        self, tmp_path, create_log_file
+    ):
         data_dir = str(tmp_path)
         config["data_dir"] = data_dir
         f = io.StringIO()
         content = "custom log message"
         now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-        self.create_log_file(
+        create_log_file(
             data_dir,
             timestamp=now,
             test_type="ceph",
             job_id="1",
             content="another log",
         )
-        self.create_log_file(
+        create_log_file(
             data_dir, timestamp=now, test_type="ceph", job_id="2", content=content
         )
 
@@ -107,7 +113,9 @@ class TestDevStack:
             await devstack.logs(job_id="2")
         assert content in f.getvalue()
 
-    async def test_logs_display_content_of_provided_run_name(self, tmp_path):
+    async def test_logs_display_content_of_provided_run_name(
+        self, tmp_path, create_log_file
+    ):
         data_dir = str(tmp_path)
         config["data_dir"] = data_dir
         f = io.StringIO()
@@ -117,11 +125,11 @@ class TestDevStack:
             "%Y-%m-%d_%H:%M:%S"
         )
 
-        self.create_log_file(
+        create_log_file(
             data_dir,
             timestamp=now,
         )
-        run_name = self.create_log_file(
+        run_name = create_log_file(
             data_dir,
             timestamp=three_days_ago,
             content=content,
@@ -132,37 +140,43 @@ class TestDevStack:
             await devstack.logs(run_name=run_name)
         assert content in f.getvalue()
 
-    async def test_logs_locate_display_file_path_instead_of_config(self, tmp_path):
+    async def test_logs_locate_display_file_path_instead_of_config(
+        self, tmp_path, create_log_file
+    ):
         data_dir = str(tmp_path)
 
         config["data_dir"] = data_dir
         f = io.StringIO()
-        log_file = self.create_log_file(data_dir)
+        log_file = create_log_file(data_dir)
         with contextlib.redirect_stdout(f):
             devstack = CephDevStack()
             await devstack.logs(locate=True)
         assert log_file in f.getvalue()
 
-    def create_log_file(self, data_dir: str, **kwargs):
-        parts = {
-            "timestamp": (datetime.now() - timedelta(days=rd.randint(1, 100))).strftime(
-                "%Y-%m-%d_%H:%M:%S"
-            ),
-            "test_type": rd.choice(["ceph", "rgw", "rbd", "mds"]),
-            "job_id": rd.randint(1, 100),
-            "content": "some log data",
-            **kwargs,
-        }
-        timestamp = parts["timestamp"]
-        test_type = parts["test_type"]
-        job_id = parts["job_id"]
-        content = parts["content"]
+    @pytest.fixture(scope="class")
+    def create_log_file(self):
+        def _create_log_file(data_dir: str, **kwargs):
+            parts = {
+                "timestamp": (
+                    datetime.now() - timedelta(days=rd.randint(1, 100))
+                ).strftime("%Y-%m-%d_%H:%M:%S"),
+                "test_type": rd.choice(["ceph", "rgw", "rbd", "mds"]),
+                "job_id": rd.randint(1, 100),
+                "content": "some log data",
+                **kwargs,
+            }
+            timestamp = parts["timestamp"]
+            test_type = parts["test_type"]
+            job_id = parts["job_id"]
+            content = parts["content"]
 
-        run_name = f"root-{timestamp}-orch:cephadm:{test_type}-small-main-distro-default-testnode"
-        log_dir = f"{data_dir}/archive/{run_name}/{job_id}"
+            run_name = f"root-{timestamp}-orch:cephadm:{test_type}-small-main-distro-default-testnode"
+            log_dir = f"{data_dir}/archive/{run_name}/{job_id}"
 
-        os.makedirs(log_dir, exist_ok=True)
-        log_file = f"{log_dir}/teuthology.log"
-        with open(log_file, "w") as f:
-            f.write(content)
-        return log_file
+            os.makedirs(log_dir, exist_ok=True)
+            log_file = f"{log_dir}/teuthology.log"
+            with open(log_file, "w") as f:
+                f.write(content)
+            return log_file
+
+        return _create_log_file

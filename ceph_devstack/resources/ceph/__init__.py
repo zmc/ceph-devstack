@@ -237,7 +237,7 @@ class CephDevStack:
         except FileNotFoundError:
             logger.error("No log file found")
         except TooManyJobsFound as e:
-            msg = "Found too many jobs: {jobs} for target run. Please pick a job id with -j flag.".format(
+            msg = "Found too many jobs ({jobs}) for target run. Please pick a job id with -j flag.".format(
                 jobs=", ".join(e.jobs)
             )
             logger.error(msg)
