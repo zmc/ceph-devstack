@@ -1,7 +1,6 @@
 import os
 import io
 import contextlib
-import tempfile
 import random as rd
 from datetime import datetime, timedelta
 import secrets
@@ -51,98 +50,98 @@ class TestDevStack:
             get_job_id(jobs)
         assert exc.value.jobs == jobs
 
-    async def test_logs_command_display_log_file_of_latest_run(self):
-        with tempfile.TemporaryDirectory() as data_dir:
-            config["data_dir"] = data_dir
-            f = io.StringIO()
-            content = "custom log content"
-            now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-            forty_days_ago = (datetime.now() - timedelta(days=40)).strftime(
-                "%Y-%m-%d_%H:%M:%S"
-            )
+    async def test_logs_command_display_log_file_of_latest_run(self, tmp_path):
+        data_dir = str(tmp_path)
+        config["data_dir"] = data_dir
+        f = io.StringIO()
+        content = "custom log content"
+        now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        forty_days_ago = (datetime.now() - timedelta(days=40)).strftime(
+            "%Y-%m-%d_%H:%M:%S"
+        )
 
-            self.create_logfile(data_dir, timestamp=now, content=content)
-            self.create_logfile(data_dir, timestamp=forty_days_ago)
+        self.create_logfile(data_dir, timestamp=now, content=content)
+        self.create_logfile(data_dir, timestamp=forty_days_ago)
 
-            with contextlib.redirect_stdout(f):
-                devstack = CephDevStack()
-                await devstack.logs()
-            assert content in f.getvalue()
+        with contextlib.redirect_stdout(f):
+            devstack = CephDevStack()
+            await devstack.logs()
+        assert content in f.getvalue()
 
-    async def test_logs_display_roughly_contents_of_log_file(self):
-        with tempfile.TemporaryDirectory() as data_dir:
-            config["data_dir"] = data_dir
-            f = io.StringIO()
-            content = "".join(
-                secrets.choice(string.ascii_letters + string.digits)
-                for _ in range(6 * 8 * 1024)
-            )
-            now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-            self.create_logfile(data_dir, timestamp=now, content=content)
+    async def test_logs_display_roughly_contents_of_log_file(self, tmp_path):
+        data_dir = str(tmp_path)
+        config["data_dir"] = data_dir
+        f = io.StringIO()
+        content = "".join(
+            secrets.choice(string.ascii_letters + string.digits)
+            for _ in range(6 * 8 * 1024)
+        )
+        now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        self.create_logfile(data_dir, timestamp=now, content=content)
 
-            with contextlib.redirect_stdout(f):
-                devstack = CephDevStack()
-                await devstack.logs()
-            assert content == f.getvalue()
+        with contextlib.redirect_stdout(f):
+            devstack = CephDevStack()
+            await devstack.logs()
+        assert content == f.getvalue()
 
-    async def test_logs_command_display_log_file_of_given_job_id(self):
-        with tempfile.TemporaryDirectory() as data_dir:
-            config["data_dir"] = data_dir
-            f = io.StringIO()
-            content = "custom log message"
-            now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+    async def test_logs_command_display_log_file_of_given_job_id(self, tmp_path):
+        data_dir = str(tmp_path)
+        config["data_dir"] = data_dir
+        f = io.StringIO()
+        content = "custom log message"
+        now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-            self.create_logfile(
-                data_dir,
-                timestamp=now,
-                test_type="ceph",
-                job_id="1",
-                content="another log",
-            )
-            self.create_logfile(
-                data_dir, timestamp=now, test_type="ceph", job_id="2", content=content
-            )
+        self.create_logfile(
+            data_dir,
+            timestamp=now,
+            test_type="ceph",
+            job_id="1",
+            content="another log",
+        )
+        self.create_logfile(
+            data_dir, timestamp=now, test_type="ceph", job_id="2", content=content
+        )
 
-            with contextlib.redirect_stdout(f):
-                devstack = CephDevStack()
-                await devstack.logs(job_id="2")
-            assert content in f.getvalue()
+        with contextlib.redirect_stdout(f):
+            devstack = CephDevStack()
+            await devstack.logs(job_id="2")
+        assert content in f.getvalue()
 
-    async def test_logs_display_content_of_provided_run_name(self):
-        with tempfile.TemporaryDirectory() as data_dir:
-            config["data_dir"] = data_dir
-            f = io.StringIO()
-            content = "custom content"
-            now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-            three_days_ago = (datetime.now() - timedelta(days=3)).strftime(
-                "%Y-%m-%d_%H:%M:%S"
-            )
+    async def test_logs_display_content_of_provided_run_name(self, tmp_path):
+        data_dir = str(tmp_path)
+        config["data_dir"] = data_dir
+        f = io.StringIO()
+        content = "custom content"
+        now = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        three_days_ago = (datetime.now() - timedelta(days=3)).strftime(
+            "%Y-%m-%d_%H:%M:%S"
+        )
 
-            self.create_logfile(
-                data_dir,
-                timestamp=now,
-            )
-            run_name = self.create_logfile(
-                data_dir,
-                timestamp=three_days_ago,
-                content=content,
-            ).split("/")[-3]
+        self.create_logfile(
+            data_dir,
+            timestamp=now,
+        )
+        run_name = self.create_logfile(
+            data_dir,
+            timestamp=three_days_ago,
+            content=content,
+        ).split("/")[-3]
 
-            with contextlib.redirect_stdout(f):
-                devstack = CephDevStack()
-                await devstack.logs(run_name=run_name)
-            assert content in f.getvalue()
+        with contextlib.redirect_stdout(f):
+            devstack = CephDevStack()
+            await devstack.logs(run_name=run_name)
+        assert content in f.getvalue()
 
-    async def test_logs_locate_display_file_path_instead_of_config(self):
-        with tempfile.TemporaryDirectory() as data_dir:
-            config["data_dir"] = data_dir
-            f = io.StringIO()
+    async def test_logs_locate_display_file_path_instead_of_config(self, tmp_path):
+        data_dir = str(tmp_path)
 
-            logfile = self.create_logfile(data_dir)
-            with contextlib.redirect_stdout(f):
-                devstack = CephDevStack()
-                await devstack.logs(locate=True)
-            assert logfile in f.getvalue()
+        config["data_dir"] = data_dir
+        f = io.StringIO()
+        logfile = self.create_logfile(data_dir)
+        with contextlib.redirect_stdout(f):
+            devstack = CephDevStack()
+            await devstack.logs(locate=True)
+        assert logfile in f.getvalue()
 
     def create_logfile(self, data_dir: str, **kwargs):
         parts = {
