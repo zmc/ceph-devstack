@@ -152,3 +152,44 @@ export TEUTHOLOGY_TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepi
 export TEUTHOLOGY_MACHINE_TYPE="smithi"
 ```
 
+### Setup for development
+
+1. First fork the repo if you have not done so.
+2. Clone your forked repo
+```bash
+git clone https://github.com/<user-name>/ceph-devstack
+```
+
+3. Setup the remote repo as upstream (this will prevent creating additional branches)
+```bash
+git remote add upstream https://github.com/zmc/ceph-devstack
+```
+
+4. Create virtual env in the root directory of ceph-devstack & install python dependencies
+```bash
+python3 -m venv venv
+./venv/bin/pip3 install -e .
+```
+
+5. Activate venv
+```bash
+source venv/bin/activate
+```
+
+6. Run doctor command to check & fix the dependencies that you need for ceph-devstack
+```bash
+ceph-devstack -v doctor --fix
+```
+
+7. Build, Create and Start the all containers in ceph-devstack
+```bash
+ceph-devstack -v build
+ceph-devstack -v create
+ceph-devstack -v start
+```
+
+8. Test the containers by waiting for teuthology to finish and print the logs
+```bash
+ceph-devstack wait teuthology
+podman logs -f teuthology
+```
