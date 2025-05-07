@@ -151,49 +151,45 @@ Once you have your machines locked, you need to provide a list of their hostname
 export TEUTHOLOGY_TESTNODES="smithiXXX.front.sepia.ceph.com,smithiYYY.front.sepia.ceph.com"
 export TEUTHOLOGY_MACHINE_TYPE="smithi"
 ```
-### For GSoC 2025 Applicants
 
-Thank you for your interest in our project!
+### Setup for development
 
-To start off, we would like you to familiarise yourself with this project. This would involve understanding the basics of the [Teuthology](https://github.com/ceph/teuthology) as well.
-
-Evaluation Tasks -
-
-##### Task 1
-1. Set up ceph-devstack locally (you can see supported Operating Systems here - https://github.com/zmc/ceph-devstack/tree/main)
-2. Test your setup by making sure that you can run the following command without any issues:
-
+1. First fork the repo if you have not done so.
+2. Clone your forked repo
 ```bash
-ceph-devstack start
+git clone https://github.com/<user-name>/ceph-devstack
 ```
 
-Once you have this running, share a screenshot with the mentors.
+3. Setup the remote repo as upstream (this will prevent creating additional branches)
+```bash
+git remote add upstream https://github.com/zmc/ceph-devstack
+```
 
-##### Task 2
+4. Create virtual env in the root directory of ceph-devstack & install python dependencies
+```bash
+python3 -m venv venv
+./venv/bin/pip3 install -e .
+```
 
-Right now, we cannot determine if the test run was successful or not from the output of "teuthology" container logs. We would need to look at logs archive (particularly `teuthology.log` file) to see if the test passed successfully.
+5. Activate venv
+```bash
+source venv/bin/activate
+```
 
+6. Run doctor command to check & fix the dependencies that you need for ceph-devstack
+```bash
+ceph-devstack -v doctor --fix
+```
 
-Implement a new ceph-devstack command to locate / display `teuthology.log` log file of a test run. By default, test logs are found at `~/.local/share/ceph-devstack`, but this path can be configurable. Log archives are stored as `<run-name>/<job-id>/teuthology.log`.
+7. Build, Create and Start the all containers in ceph-devstack
+```bash
+ceph-devstack -v build
+ceph-devstack -v create
+ceph-devstack -v start
+```
 
-By default, this command should locate logs of most recent test run, and dumps logs if there is only one job. If multiple jobs are found in a run, alert the user and ask them to choose a job.
-
-We can determine "latest run" by parsing datetime in the run name.
-
-Also add a flag to this command to output filename (full path) instead of contents of logfile.
-
-##### BONUS
-
-Write unit tests for the above feature.
-
-#### Problem Statement
-
-Implement a feature that allows ceph-devstack to to configured to use an arbitrary number of storage devices per testnode container. This will enable us to deploy multiple [Ceph OSDs](https://docs.ceph.com/en/latest/glossary/#term-Ceph-OSD) per testnode - bringing us closer to how we use teuthology in production. Right now, ceph-devstack supports 1 OSD per testnode.
-
-If you have extra time, you might consider also allowing the _size_ of the storage devices to be configurable. The same size can be used for all.
-
-In the future, we may also want to implement a feature that allows ceph-devstack to discover and directly consume unused storage devices on the host machine, as opposed to using loop devices. This would enable more performance-sensitive testing.
-
-#### Connect
-
-Feel free to reach out to us on the [#gsoc-2025-teuthology](https://ceph-storage.slack.com/archives/C08GR4Q8YS0) Slack channel under ceph-storage.slack.com. Use slack invite link at the bottom of [this page](https://ceph.io/en/community/connect/) to join ceph-storage.slack.com workspace.
+8. Test the containers by waiting for teuthology to finish and print the logs
+```bash
+ceph-devstack wait teuthology
+podman logs -f teuthology
+```
