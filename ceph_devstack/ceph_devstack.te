@@ -28,6 +28,7 @@ require {
 
 	type fixed_disk_device_t;
 	class blk_file setattr;
+    class blk_file mounton;
 
 	type fs_t;
 
@@ -68,6 +69,10 @@ require {
 
 	class bpf prog_load;
 	class bpf map_create;
+
+	type fuse_device_t;
+
+	type tun_tap_device_t;
 }
 
 #============= container_init_t ==============
@@ -106,3 +111,6 @@ allow container_init_t system_map_t:file mounton;
 allow container_init_t mtrr_device_t:file mounton;
 allow container_init_t self:bpf prog_load;
 allow container_init_t self:bpf map_create;
+allow container_init_t fuse_device_t:chr_file mounton;
+allow container_init_t fixed_disk_device_t:blk_file mounton;
+allow container_init_t tun_tap_device_t:chr_file mounton;
