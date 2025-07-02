@@ -333,6 +333,14 @@ class Teuthology(Container):
                 "-v",
                 f"{ansible_inv}/secrets:/etc/ansible/secrets",
             ]
+        ssh_auth_socket = os.environ.get("SSH_AUTH_SOCK")
+        if ssh_auth_socket:
+            cmd += [
+                "-v",
+                f"{ssh_auth_socket}:{ssh_auth_socket}",
+                "-e",
+                f"SSH_AUTH_SOCK={ssh_auth_socket}",
+            ]
         cmd += [
             "--name",
             "{name}",
