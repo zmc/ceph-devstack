@@ -74,7 +74,7 @@ class SSHKeyPair(Secret):
                 check=True,
                 force_local=True,
             )
-            self.pubkey_path = f"{privkey_path}.pub"
+        self.pubkey_path = f"{privkey_path}.pub"
         self.privkey_path = privkey_path
 
 
