@@ -341,6 +341,14 @@ class Teuthology(Container):
                 "-e",
                 f"SSH_AUTH_SOCK={ssh_auth_socket}",
             ]
+        custom_conf = os.environ.get("TEUTHOLOGY_CONF")
+        if custom_conf:
+            cmd += [
+                "-v",
+                f"{custom_conf}:/tmp/conf.yaml",
+                "-e",
+                f"TEUTHOLOGY_CONF=/tmp/conf.yaml",
+            ]
         cmd += [
             "--name",
             "{name}",
