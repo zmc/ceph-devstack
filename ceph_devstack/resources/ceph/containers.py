@@ -349,6 +349,12 @@ class Teuthology(Container):
                 "-e",
                 f"TEUTHOLOGY_CONF=/tmp/conf.yaml",
             ]
+        teuthology_yaml = os.environ.get("TEUTHOLOGY_YAML")
+        if teuthology_yaml:
+            cmd += [
+                "-v",
+                f"{teuthology_yaml}:/root/.teuthology.yaml",
+            ]
         cmd += [
             "--name",
             "{name}",
