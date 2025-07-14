@@ -20,4 +20,4 @@ count = 3
 image = "quay.io/ceph-infra/teuthology-testnode:latest"
 
 [containers.teuthology]
-image = "quay.io/ceph-infra/teuthology-dev:latest"
+image = "quay.io/ceph-infra/teuthology-dev:main"
