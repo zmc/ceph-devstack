@@ -240,11 +240,15 @@ class TestNode(Container):
     @property
     def additional_volumes(self):
         volumes = []
-        if DEFAULT_CONFIG_PATH.parent.joinpath("sshd_config").exists():
+        if (
+            sshd_config := DEFAULT_CONFIG_PATH.parent.joinpath(
+                "sshd_config"
+            ).expanduser()
+        ) and sshd_config.exists():
             volumes.extend(
                 [
                     "-v",
-                    f"{DEFAULT_CONFIG_PATH.parent.joinpath('sshd_config')}:/etc/ssh/sshd_config.d/teuthology.conf:z",
+                    f"{sshd_config}:/etc/ssh/sshd_config.d/teuthology.conf:z",
                 ]
             )
         return volumes
@@ -304,6 +308,7 @@ class TestNode(Container):
             check=True,
         )
         await self.cmd(["sudo", "losetup", device, loop_img_name], check=True)
+        await self.cmd(["chcon", "-t", "fixed_disk_device_t", device])
 
     async def remove_loop_device(self, device: str):
         loop_img_name = os.path.join(self.loop_img_dir, self.device_image(device))
