@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 from typing import List
 
-from ceph_devstack import config
+from ceph_devstack import config, DEFAULT_CONFIG_PATH
 from ceph_devstack.host import host
 from ceph_devstack.resources.container import Container
 
@@ -154,7 +154,7 @@ class Pulpito(Container):
 
 
 class TestNode(Container):
-    cmd_vars: List[str] = ["name", "image", "loop_dev_name"]
+    cmd_vars: List[str] = ["name", "image"]
     capabilities = [
         "SYS_ADMIN",
         "NET_ADMIN",
@@ -170,49 +170,6 @@ class TestNode(Container):
         "AUDIT_WRITE",
         "AUDIT_CONTROL",
     ]
-    create_cmd = [
-        "podman",
-        "container",
-        "create",
-        "--rm",
-        "-i",
-        "--network",
-        "ceph-devstack",
-        "--systemd=always",
-        "--cgroupns=host",
-        "--secret",
-        "id_rsa.pub",
-        "-p",
-        "22",
-        "--cap-add",
-        ",".join(capabilities),
-        "--security-opt",
-        "unmask=/sys/dev/block",
-        "-v",
-        "/sys/dev/block:/sys/dev/block",
-        "-v",
-        "/sys/fs/cgroup:/sys/fs/cgroup",
-        "-v",
-        "/dev/fuse:/dev/fuse",
-        "-v",
-        "/dev/disk:/dev/disk",
-        # cephadm tries to access these DMI-related files, and by default they
-        # have 600 permissions on the host. It appears to be ok if they are
-        # empty, though.
-        "-v",
-        "/dev/null:/sys/class/dmi/id/board_serial",
-        "-v",
-        "/dev/null:/sys/class/dmi/id/chassis_serial",
-        "-v",
-        "/dev/null:/sys/class/dmi/id/product_serial",
-        "--device",
-        "/dev/net/tun",
-        "--device",
-        "{loop_dev_name}",
-        "--name",
-        "{name}",
-        "{image}",
-    ]
     env_vars = {
         "SSH_PUBKEY": "",
         "CEPH_VOLUME_ALLOW_LOOP_DEVICES": "true",
@@ -220,49 +177,118 @@ class TestNode(Container):
 
     def __init__(self, name: str = ""):
         super().__init__(name=name)
-        self.loop_index = 0
-        self.loop_img_name = self.name
+        self.index = 0
         if "_" in self.name:
-            self.loop_index = int(self.name.split("_")[-1])
-        else:
-            self.loop_img_name += str(self.loop_index)
-        self.loop_dev_name = f"/dev/loop{self.loop_index}"
+            self.index = int(self.name.split("_")[-1])
+        self.osd_count = config["containers"]["testnode"].get("osd_count", 1)
+        self.devices = [self.device_name(i) for i in range(self.osd_count)]
 
     @property
     def loop_img_dir(self):
         return (Path(config["data_dir"]) / "disk_images").expanduser()
 
+    @property
+    def create_cmd(self):
+        return [
+            "podman",
+            "container",
+            "create",
+            "--rm",
+            "-i",
+            "--network",
+            "ceph-devstack",
+            "--systemd=always",
+            "--cgroupns=host",
+            "--secret",
+            "id_rsa.pub",
+            "-p",
+            "22",
+            "--cap-add",
+            ",".join(self.capabilities),
+            "--security-opt",
+            "unmask=/sys/dev/block",
+            "-v",
+            "/sys/dev/block:/sys/dev/block",
+            "-v",
+            "/sys/fs/cgroup:/sys/fs/cgroup",
+            "-v",
+            "/dev/fuse:/dev/fuse",
+            "-v",
+            "/dev/disk:/dev/disk",
+            # cephadm tries to access these DMI-related files, and by default they
+            # have 600 permissions on the host. It appears to be ok if they are
+            # empty, though.
+            # The below was bizarrely causing this error message:
+            # No such file or directory: OCI runtime attempted to invoke a command that was
+            # not found
+            # That was causing the container to fail to start up.
+            "-v",
+            "/dev/null:/sys/class/dmi/id/board_serial",
+            "-v",
+            "/dev/null:/sys/class/dmi/id/chassis_serial",
+            "-v",
+            "/dev/null:/sys/class/dmi/id/product_serial",
+            *self.additional_volumes,
+            "--device",
+            "/dev/net/tun",
+            *[f"--device={device}" for device in self.devices],
+            "--name",
+            "{name}",
+            "{image}",
+        ]
+
+    @property
+    def additional_volumes(self):
+        volumes = []
+        if DEFAULT_CONFIG_PATH.parent.joinpath("sshd_config").exists():
+            volumes.extend(
+                [
+                    "-v",
+                    f"{DEFAULT_CONFIG_PATH.parent.joinpath('sshd_config')}:/etc/ssh/sshd_config.d/teuthology.conf:z",
+                ]
+            )
+        return volumes
+
     async def create(self):
         if not await self.exists():
-            await self.create_loop_device()
+            await self.create_loop_devices()
         await super().create()
 
     async def remove(self):
         await super().remove()
-        await self.remove_loop_device()
+        await self.remove_loop_devices()
 
-    async def create_loop_device(self):
+    async def create_loop_devices(self):
+        for device in self.devices:
+            await self.create_loop_device(device)
+
+    async def remove_loop_devices(self):
+        for device in self.devices:
+            await self.remove_loop_device(device)
+
+    async def create_loop_device(self, device: str):
         size = config["containers"]["testnode"]["loop_device_size"]
         os.makedirs(self.loop_img_dir, exist_ok=True)
         proc = await self.cmd(["lsmod", "|", "grep", "loop"])
         if proc and await proc.wait() != 0:
             await self.cmd(["sudo", "modprobe", "loop"])
-        loop_img_name = os.path.join(self.loop_img_dir, self.loop_img_name)
-        await self.remove_loop_device()
+        loop_img_name = os.path.join(self.loop_img_dir, self.device_image(device))
+        await self.remove_loop_device(device)
+        device_pos = device.lstrip("/dev/loop")
         await self.cmd(
             [
                 "sudo",
                 "mknod",
                 "-m700",
-                self.loop_dev_name,
+                device,
                 "b",
                 "7",
-                str(self.loop_index),
+                device_pos,
             ],
             check=True,
         )
         await self.cmd(
-            ["sudo", "chown", f"{os.getuid()}:{os.getgid()}", self.loop_dev_name],
+            ["sudo", "chown", f"{os.getuid()}:{os.getgid()}", device],
             check=True,
         )
         await self.cmd(
@@ -277,19 +303,23 @@ class TestNode(Container):
             ],
             check=True,
         )
-        await self.cmd(
-            ["sudo", "losetup", self.loop_dev_name, loop_img_name], check=True
-        )
+        await self.cmd(["sudo", "losetup", device, loop_img_name], check=True)
 
-    async def remove_loop_device(self):
-        loop_img_name = os.path.join(self.loop_img_dir, self.loop_img_name)
-        if os.path.ismount(self.loop_dev_name):
-            await self.cmd(["umount", self.loop_dev_name], check=True)
-        if host.path_exists(self.loop_dev_name):
-            await self.cmd(["sudo", "losetup", "-d", self.loop_dev_name])
-            await self.cmd(["sudo", "rm", "-f", self.loop_dev_name], check=True)
+    async def remove_loop_device(self, device: str):
+        loop_img_name = os.path.join(self.loop_img_dir, self.device_image(device))
+        if os.path.ismount(device):
+            await self.cmd(["umount", device], check=True)
+        if host.path_exists(device):
+            await self.cmd(["sudo", "losetup", "-d", device])
+            await self.cmd(["sudo", "rm", "-f", device], check=True)
         if host.path_exists(loop_img_name):
             os.remove(loop_img_name)
+
+    def device_name(self, index: int):
+        return f"/dev/loop{self.osd_count * self.index + index}"
+
+    def device_image(self, device: str):
+        return f"{self.name}-{device.lstrip('/dev/loop')}"
 
 
 class Teuthology(Container):
