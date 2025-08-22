@@ -180,8 +180,10 @@ class TestNode(Container):
         self.index = 0
         if "_" in self.name:
             self.index = int(self.name.split("_")[-1])
-        self.osd_count = config["containers"]["testnode"].get("osd_count", 1)
-        self.devices = [self.device_name(i) for i in range(self.osd_count)]
+        self.loop_device_count = config["containers"]["testnode"].get(
+            "loop_device_count", 1
+        )
+        self.devices = [self.device_name(i) for i in range(self.loop_device_count)]
 
     @property
     def loop_img_dir(self):
@@ -321,7 +323,7 @@ class TestNode(Container):
             os.remove(loop_img_name)
 
     def device_name(self, index: int):
-        return f"/dev/loop{self.osd_count * self.index + index}"
+        return f"/dev/loop{self.loop_device_count * self.index + index}"
 
     def device_image(self, device: str):
         return f"{self.name}-{device.lstrip('/dev/loop')}"
