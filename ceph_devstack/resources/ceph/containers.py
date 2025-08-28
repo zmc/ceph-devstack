@@ -246,7 +246,7 @@ class TestNode(Container):
         await self.remove_loop_device()
 
     async def create_loop_device(self):
-        size_gb = 5
+        size = config["containers"]["testnode"]["loop_device_size"]
         os.makedirs(self.loop_img_dir, exist_ok=True)
         proc = await self.cmd(["lsmod", "|", "grep", "loop"])
         if proc and await proc.wait() != 0:
@@ -277,7 +277,7 @@ class TestNode(Container):
                 f"of={loop_img_name}",
                 "bs=1",
                 "count=0",
-                f"seek={size_gb}G",
+                f"seek={size}",
             ],
             check=True,
         )
