@@ -280,7 +280,7 @@ class TestNode(Container):
             await self.cmd(["sudo", "modprobe", "loop"])
         loop_img_name = os.path.join(self.loop_img_dir, self.device_image(device))
         await self.remove_loop_device(device)
-        device_pos = device.lstrip("/dev/loop")
+        device_pos = device.removeprefix("/dev/loop")
         await self.cmd(
             [
                 "sudo",
@@ -326,7 +326,7 @@ class TestNode(Container):
         return f"/dev/loop{self.loop_device_count * self.index + index}"
 
     def device_image(self, device: str):
-        return f"{self.name}-{device.lstrip('/dev/loop')}"
+        return f"{self.name}-{device.removeprefix('/dev/loop')}"
 
 
 class Teuthology(Container):
