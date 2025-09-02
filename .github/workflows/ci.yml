@@ -6,9 +6,21 @@ on:
   workflow_dispatch:
 
 jobs:
+  lint:
+    name: Check code style
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install precommit
+        run: pip install pre-commit
+      - name: Check lint
+        run: pre-commit run ruff-check --all-files
+      - name: Check format
+        run: pre-commit run ruff-format --all-files
   test:
     name: CI on python${{ matrix.python }} via ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: lint
     strategy:
       matrix:
         include:
