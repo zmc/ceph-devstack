@@ -253,7 +253,7 @@ async def check_requirements():
         result = result and await PodmanDNSPlugin().evaluate()
 
     # sysctl settings for OSD
-    result = result and await SysctlValue("fs.aio-max-nr", 1048576).evaluate()
+    result = result and await SysctlValue("fs.aio-max-nr", 2097152).evaluate()
     result = result and await SysctlValue("kernel.pid_max", 4194304).evaluate()
 
     return result
