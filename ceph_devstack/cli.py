@@ -40,6 +40,10 @@ def main():
             return
         elif args.command == "wait":
             return await obj.wait(container_name=args.container)
+        elif args.command == "logs":
+            return await obj.logs(
+                run_name=args.run_name, job_id=args.job_id, locate=args.locate
+            )
         else:
             await obj.apply(args.command)
             return 0

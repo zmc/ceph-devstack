@@ -23,6 +23,8 @@ from ceph_devstack.resources.ceph.requirements import (
     LoopControlDeviceWriteable,
     SELinuxModule,
 )
+from ceph_devstack.resources.ceph.utils import get_most_recent_run, get_job_id
+from ceph_devstack.resources.ceph.exceptions import TooManyJobsFound
 
 
 class SSHKeyPair(Secret):
@@ -226,3 +228,39 @@ class CephDevStack:
                     return await object.wait()
         logger.error(f"Could not find container {container_name}")
         return 1
+
+    async def logs(
+        self, run_name: str = None, job_id: str = None, locate: bool = False
+    ):
+        try:
+            log_file = self.get_log_file(run_name, job_id)
+        except FileNotFoundError:
+            logger.error("No log file found")
+        except TooManyJobsFound as e:
+            msg = "Found too many jobs ({jobs}) for target run. Please pick a job id with -j option.".format(
+                jobs=", ".join(e.jobs)
+            )
+            logger.error(msg)
+        else:
+            if locate:
+                print(log_file)
+            else:
+                buffer_size = 8 * 1024
+                with open(log_file) as f:
+                    while chunk := f.read(buffer_size):
+                        print(chunk, end="")
+
+    def get_log_file(self, run_name: str = None, job_id: str = None):
+        archive_dir = Teuthology().archive_dir.expanduser()
+
+        if not run_name:
+            run_name = get_most_recent_run(os.listdir(archive_dir))
+        run_dir = archive_dir.joinpath(run_name)
+
+        if not job_id:
+            job_id = get_job_id(os.listdir(run_dir))
+
+        log_file = run_dir.joinpath(job_id, "teuthology.log")
+        if not log_file.exists():
+            raise FileNotFoundError
+        return log_file
