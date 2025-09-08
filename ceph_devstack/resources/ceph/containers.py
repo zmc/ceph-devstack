@@ -199,12 +199,8 @@ class TestNode(Container):
         # cephadm tries to access these DMI-related files, and by default they
         # have 600 permissions on the host. It appears to be ok if they are
         # empty, though.
-        # The below was bizarrely causing this error message:
-        # No such file or directory: OCI runtime attempted to invoke a command that was
-        # not found
-        # That was causing the container to fail to start up.
-        # "-v",
-        # "/dev/null:/sys/class/dmi/id/board_serial",
+        "-v",
+        "/dev/null:/sys/class/dmi/id/board_serial",
         "-v",
         "/dev/null:/sys/class/dmi/id/chassis_serial",
         "-v",
@@ -347,7 +343,7 @@ class Teuthology(Container):
                 "-v",
                 f"{custom_conf}:/tmp/conf.yaml",
                 "-e",
-                f"TEUTHOLOGY_CONF=/tmp/conf.yaml",
+                "TEUTHOLOGY_CONF=/tmp/conf.yaml",
             ]
         teuthology_yaml = os.environ.get("TEUTHOLOGY_YAML")
         if teuthology_yaml:
