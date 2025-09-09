@@ -99,9 +99,7 @@ class Host:
         proc = await host.arun(["getsebool", name])
         assert proc.stdout is not None
         out = await proc.stdout.read()
-        if out.decode().strip() != f"{name} --> on":
-            return False
-        return True
+        return out.decode().strip() != f"{name} --> on"
 
     async def get_sysctl_value(self, name: str) -> int:
         proc = await host.arun(["sysctl", "-b", name])
