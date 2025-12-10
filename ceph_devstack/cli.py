@@ -9,7 +9,7 @@ from ceph_devstack.requirements import check_requirements
 from ceph_devstack.resources.ceph import CephDevStack
 
 
-def main():
+def main():  # noqa: C901
     args = parse_args(sys.argv[1:])
     config.load(args.config_file)
     if args.verbose:

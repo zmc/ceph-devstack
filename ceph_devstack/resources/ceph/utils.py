@@ -29,8 +29,8 @@ def get_most_recent_run(runs: list[str]) -> str:
             )
         )
         return run_name
-    except StopIteration:
-        raise FileNotFoundError
+    except StopIteration as e:
+        raise FileNotFoundError from e
 
 
 def get_job_id(jobs: list[str]):
